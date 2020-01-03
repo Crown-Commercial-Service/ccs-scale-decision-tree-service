@@ -1,0 +1,22 @@
+camel:
+  springboot:
+    name: ScaleGuidedMatch
+  
+  component:
+    servlet:
+      mapping:
+        # Important: must match any proxy request from API Gateway
+        contextPath: /*
+        
+logging:
+  level:
+    uk.gov.crowncommercial.dts.scale: DEBUG
+    org.apache.camel: INFO
+    org.springframework: INFO
+    org.apache.tomcat: INFO
+    org.apache.catalina: INFO
+    
+server:
+  tomcat:
+    accesslog:
+      enabled: true    
