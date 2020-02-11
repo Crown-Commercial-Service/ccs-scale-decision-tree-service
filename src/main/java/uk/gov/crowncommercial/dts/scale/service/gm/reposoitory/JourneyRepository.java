@@ -31,9 +31,13 @@ public class JourneyRepository {
   private static final JourneyResult JR_TFMT2 = new JourneyResult("Traffic Management Technology 2",
       "Transport technology, including traffic signals and CCTV, parking and access control, street lighting, intelligent transport systems and professional services.",
       "RM1089", "");
-  private static final JourneyResult JR_TP2 = new JourneyResult("Technology Products 2",
+  private static final JourneyResult JR_TP2_LAPTOPS = new JourneyResult("Technology Products 2",
       "Technology Products 2 (TP2) offers public sector customers a flexible and compliant way to source all their technology product needs (hardware and software)",
       "RM3733", "http://35.176.126.74:3000/t/computing/mobile-devices/laptops");
+
+  private static final JourneyResult JR_TP2_CAMERAS = new JourneyResult("Technology Products 2",
+      "Technology Products 2 (TP2) offers public sector customers a flexible and compliant way to source all their technology product needs (hardware and software)",
+      "RM3733", "http://35.176.126.74:3000/t/computing/mobile-devices/cameras");
 
   private static final JourneyResult JR_TPAS =
       new JourneyResult("Technology Products & Associated Services",
@@ -62,12 +66,11 @@ public class JourneyRepository {
   static {
 
     JourneyNode journeyNodeTPAS = JourneyNode.builder().result(of(JR_TPAS)).build();
-    JourneyNode journeyNodeTP2 = JourneyNode.builder().result(of(JR_TP2)).build();
+    JourneyNode journeyNodeTP2Laptops = JourneyNode.builder().result(of(JR_TP2_LAPTOPS)).build();
     JourneyNode journeyNodeTFMT2 = JourneyNode.builder().result(of(JR_TFMT2)).build();
 
-    JourneyNode journeyNodeJ1Q3 = JourneyNode.builder().questionId(of(3))
-        .answerProgressionNodes(
-            of(putAll(new HashMap<>(), new Object[][] {{4, journeyNodeTPAS}, {5, journeyNodeTP2}})))
+    JourneyNode journeyNodeJ1Q3 = JourneyNode.builder().questionId(of(3)).answerProgressionNodes(of(
+        putAll(new HashMap<>(), new Object[][] {{4, journeyNodeTPAS}, {5, journeyNodeTP2Laptops}})))
         .build();
 
     JourneyNode journeyNodeJ1Q2 = JourneyNode.builder().questionId(of(2))
@@ -82,10 +85,9 @@ public class JourneyRepository {
 
     DECISION_TREE.put(1, journeyNodeJ1Q1);
 
-    JourneyNode journeyNodeJ2Q3 = JourneyNode.builder().questionId(of(3))
-        .answerProgressionNodes(
-            of(putAll(new HashMap<>(), new Object[][] {{4, journeyNodeTP2}, {5, journeyNodeTP2}})))
-        .build();
+    JourneyNode journeyNodeJ2Q3 =
+        JourneyNode.builder().questionId(of(3)).answerProgressionNodes(of(putAll(new HashMap<>(),
+            new Object[][] {{4, journeyNodeTP2Laptops}, {5, journeyNodeTP2Laptops}}))).build();
 
     JourneyNode journeyNodeJ2Q2 = JourneyNode.builder().questionId(of(2))
         .answerProgressionNodes(of(
