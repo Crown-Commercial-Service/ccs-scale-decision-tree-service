@@ -6,17 +6,24 @@
 package uk.gov.crowncommercial.dts.scale.service.gm.model;
 
 import java.util.Set;
-import lombok.Value;
+import org.neo4j.ogm.annotation.NodeEntity;
+import org.neo4j.ogm.annotation.Relationship;
+import lombok.Data;
 
 /**
  * Guided Match Question
  */
-@Value
-public class Question {
+@Data
+@NodeEntity
+public class Question implements AnswerOutcome {
 
-  long id;
+  Long id;
   String text;
   UIComponentType uiType;
+
+  @Relationship(type = "ANSWER", direction = Relationship.OUTGOING)
   Set<Answer> answers;
+
+  public Question() {/* Required by Neo4J OGM */}
 
 }

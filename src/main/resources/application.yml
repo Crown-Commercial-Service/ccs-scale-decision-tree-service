@@ -15,8 +15,16 @@ logging:
     org.springframework: INFO
     org.apache.tomcat: INFO
     org.apache.catalina: INFO
+    org.neo4j.ogm: DEBUG
     
 server:
   tomcat:
     accesslog:
-      enabled: true    
+      enabled: true
+      
+spring:
+  data:
+    neo4j:
+      username: neo4j
+      password: sbx_graph
+      
