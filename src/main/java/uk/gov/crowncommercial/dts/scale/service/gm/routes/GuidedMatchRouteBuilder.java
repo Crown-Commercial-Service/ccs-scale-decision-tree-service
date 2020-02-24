@@ -83,7 +83,7 @@ public class GuidedMatchRouteBuilder extends EndpointRouteBuilder {
 
     from("direct:get-journey-next-question")
       .log(LoggingLevel.INFO, "Journey get next question invoked")
-      .bean(questionService, "getNextQuestion(${headers[id]}, ${headers[question-id]}, ${headers[answer-id]})")
+      .bean(questionService, "getNextQuestion(${headers[question-id]}, ${headers[answer-id]})")
       .choice()
         .when(simple("${body} == null"))
           .setHeader(Exchange.HTTP_RESPONSE_CODE, constant(404))
