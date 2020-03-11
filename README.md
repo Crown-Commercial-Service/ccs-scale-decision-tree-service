@@ -1,2 +1,2 @@
-# ccs-scale-guided-match-service
-Scale project guided match Java microservice.
+# ccs-scale-decision-tree-service
+Microservice exposing a Guided Match Decision Tree API.

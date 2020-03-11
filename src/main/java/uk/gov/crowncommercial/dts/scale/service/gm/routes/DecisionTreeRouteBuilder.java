@@ -21,7 +21,7 @@ import uk.gov.crowncommercial.dts.scale.service.gm.service.QuestionService;
  */
 @Component
 @RequiredArgsConstructor
-public class GuidedMatchRouteBuilder extends EndpointRouteBuilder {
+public class DecisionTreeRouteBuilder extends EndpointRouteBuilder {
 
   private static final String JSON_BINDING = RestBindingMode.json.name();
   private static final String PATH_JOURNEYS = "/journeys";
