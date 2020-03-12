@@ -9,10 +9,10 @@
         <relativePath />
     </parent>
     <groupId>uk.gov.crowncommercial.dts</groupId>
-    <artifactId>ccs-scale-guided-match-service</artifactId>
+    <artifactId>ccs-scale-decision-tree-service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>ccs-scale-guided-match-service</name>
-    <description>SCALE Guided Match service</description>
+    <name>ccs-scale-decision-tree-service</name>
+    <description>SCALE Decision Tree (Guided Match) service</description>
 
     <properties>
         <java.version>1.8</java.version>
