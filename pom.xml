@@ -85,6 +85,13 @@
             <version>${commons-collections4.version}</version>
         </dependency>
 
+        <!-- TODO: Remove once real service / mock in place -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-test</artifactId>
+            <scope>compile</scope>
+        </dependency>
+            
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>

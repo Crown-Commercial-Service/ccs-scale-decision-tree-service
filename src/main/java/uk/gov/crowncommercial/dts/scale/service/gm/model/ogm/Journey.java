@@ -1,4 +1,4 @@
-package uk.gov.crowncommercial.dts.scale.service.gm.model;
+package uk.gov.crowncommercial.dts.scale.service.gm.model.ogm;
 
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
@@ -13,17 +13,17 @@ import lombok.Data;
 @NodeEntity
 public class Journey {
 
-  Long id;
+  String uuid;
   String name;
   String[] searchTerms;
 
   @JsonIgnore
   @Relationship(type = "FIRST_QUESTION", direction = Relationship.OUTGOING)
-  Question question;
+  QuestionInstance questionInstance;
 
   public Journey() {/* Required by Neo4J OGM */}
 
-  public long getQuestionId() {
-    return question.getId();
+  public String getQuestionUuid() {
+    return questionInstance.getUuid();
   }
 }
