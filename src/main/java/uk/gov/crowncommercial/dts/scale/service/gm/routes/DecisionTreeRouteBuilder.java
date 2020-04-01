@@ -94,6 +94,7 @@ public class DecisionTreeRouteBuilder extends EndpointRouteBuilder {
       .to("direct:finalise-response");
 
     from("direct:finalise-response")
+      .removeHeaders("*")
       .setHeader("Access-Control-Allow-Origin", constant("*"));
 
     // @formatter:on
