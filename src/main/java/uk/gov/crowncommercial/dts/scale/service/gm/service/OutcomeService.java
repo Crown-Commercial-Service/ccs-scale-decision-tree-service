@@ -81,16 +81,16 @@ public class OutcomeService {
         log.debug("Single answer outcome retrieval from graph lookup service answers: {}",
             optOutcome);
       }
-
     } else if (questionType.equals(QuestionType.MULTI_SELECT_LIST)) {
+
       optOutcome =
           outcomeRepo.findMultiStaticAnswerOutcome(currentQstnUuid, questionAnswers.getData());
       log.debug("Multi answer outcome retrieval from graph via static answers: {}", optOutcome);
+
       if (!optOutcome.isPresent()) {
         optOutcome = outcomeRepo.findMultiDynamicAnswerOutcome(currentQstnUuid);
         log.debug("Multi answer outcome retrieval from graph (dynamic answers): {}", optOutcome);
       }
-
     } else {
       throw new AnswersValidationException("Question / answer type not currently supported");
     }
@@ -100,7 +100,7 @@ public class OutcomeService {
     }
 
     // Graph is malformed or lookup service does not contain outcome
-    throw new OutcomeException(currentQstnUuid, questionAnswers.getData()[0]);
+    throw new OutcomeException(currentQstnUuid, questionAnswers.getData());
   }
 
   private Outcome resolveOutcome(final QuestionInstanceOutcome questionInstanceOutcome) {

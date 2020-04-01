@@ -10,7 +10,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Value;
 
 /**
- *
+ * Varying-type outcome (agreement, question, support)
  */
 @Value
 public class Outcome {

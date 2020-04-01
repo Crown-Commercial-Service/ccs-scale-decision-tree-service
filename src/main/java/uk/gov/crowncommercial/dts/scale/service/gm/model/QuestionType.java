@@ -8,7 +8,7 @@ package uk.gov.crowncommercial.dts.scale.service.gm.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * UI component type
+ * Question type
  *
  */
 public enum QuestionType {

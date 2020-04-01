@@ -12,7 +12,7 @@ import lombok.NonNull;
 import lombok.Value;
 
 /**
- *
+ * Container for client-provided answers
  */
 @JsonDeserialize(builder = QuestionAnswers.QuestionAnswersBuilder.class)
 @Value
