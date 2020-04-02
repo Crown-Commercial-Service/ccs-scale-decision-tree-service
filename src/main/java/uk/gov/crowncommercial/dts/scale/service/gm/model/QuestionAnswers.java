@@ -1,28 +1,24 @@
-/**
- *
- * JourneyResponse.java
- *
- */
 package uk.gov.crowncommercial.dts.scale.service.gm.model;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import lombok.Builder;
+import lombok.NonNull;
 import lombok.Value;
 
 /**
- * Simple wrapper for a question ID - answer ID pair
+ * Container for client-provided answers
  */
-@JsonDeserialize(builder = JourneyResponse.JourneyResponseBuilder.class)
+@JsonDeserialize(builder = QuestionAnswers.QuestionAnswersBuilder.class)
 @Value
 @Builder
-public class JourneyResponse {
+public class QuestionAnswers {
 
-  int questionId;
-  int answerId;
+  @NonNull
+  String[] data;
 
   @JsonPOJOBuilder(withPrefix = "")
-  public static class JourneyResponseBuilder {
+  public static class QuestionAnswersBuilder {
     // Enhanced by Lombok
   }
 
