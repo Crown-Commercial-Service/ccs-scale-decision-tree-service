@@ -1,8 +1,3 @@
-/**
- *
- * QuestionType.java
- *
- */
 package uk.gov.crowncommercial.dts.scale.service.gm.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;

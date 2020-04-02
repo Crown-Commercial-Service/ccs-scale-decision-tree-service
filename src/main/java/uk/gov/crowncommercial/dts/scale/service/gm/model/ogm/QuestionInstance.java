@@ -1,8 +1,3 @@
-/**
- *
- * QuestionInstance.java
- *
- */
 package uk.gov.crowncommercial.dts.scale.service.gm.model.ogm;
 
 import java.util.Set;

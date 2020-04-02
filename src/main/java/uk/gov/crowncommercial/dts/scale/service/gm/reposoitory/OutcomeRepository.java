@@ -1,8 +1,3 @@
-/**
- *
- * OutcomeRepository.java
- *
- */
 package uk.gov.crowncommercial.dts.scale.service.gm.reposoitory;
 
 import java.util.Optional;

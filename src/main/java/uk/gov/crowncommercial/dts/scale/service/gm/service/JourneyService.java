@@ -1,8 +1,3 @@
-/**
- *
- * JourneyService.java
- *
- */
 package uk.gov.crowncommercial.dts.scale.service.gm.service;
 
 import java.util.Collection;

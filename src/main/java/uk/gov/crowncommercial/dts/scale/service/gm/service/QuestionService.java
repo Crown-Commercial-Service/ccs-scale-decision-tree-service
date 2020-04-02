@@ -1,8 +1,3 @@
-/**
- *
- * QuestionService.java
- *
- */
 package uk.gov.crowncommercial.dts.scale.service.gm.service;
 
 import java.util.Optional;
@@ -41,11 +36,11 @@ public class QuestionService {
     log.debug("Converting QuestionInstance: {}", questionInstance);
     QuestionDefinition qd = questionInstance.getQuestionDefinition();
 
-    Set<DefinedAnswer> definedAnswers = questionInstance.getAnswerGroups().stream().flatMap(ag -> {
-      return Optional.ofNullable(ag.getAnswers())
-          .orElseGet(() -> lookupService.findAnswers(questionInstance.getUuid(), "housing"))
-          .stream();
-    }).map(a -> new DefinedAnswer(a.getUuid(), a.getText())).collect(Collectors.toSet());
+    Set<DefinedAnswer> definedAnswers = questionInstance.getAnswerGroups().stream()
+        .flatMap(ag -> Optional.ofNullable(ag.getAnswers())
+            .orElseGet(() -> lookupService.findAnswers(questionInstance.getUuid(), "housing"))
+            .stream())
+        .map(a -> new DefinedAnswer(a.getUuid(), a.getText())).collect(Collectors.toSet());
 
     return Question.builder().uuid(questionInstance.getUuid()).text(qd.getText()).type(qd.getType())
         .hint(qd.getHint()).pattern(qd.getPattern()).definedAnswers(definedAnswers).build();

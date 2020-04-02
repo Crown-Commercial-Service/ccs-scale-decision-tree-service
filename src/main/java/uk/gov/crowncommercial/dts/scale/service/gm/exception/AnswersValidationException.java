@@ -1,8 +1,3 @@
-/**
- *
- * AnswersValidationException.java
- *
- */
 package uk.gov.crowncommercial.dts.scale.service.gm.exception;
 
 /**

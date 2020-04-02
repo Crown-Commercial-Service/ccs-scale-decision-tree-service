@@ -1,8 +1,3 @@
-/**
- *
- * QuestionInstanceRepositoryNeo4J.java
- *
- */
 package uk.gov.crowncommercial.dts.scale.service.gm.reposoitory;
 
 import java.util.Optional;

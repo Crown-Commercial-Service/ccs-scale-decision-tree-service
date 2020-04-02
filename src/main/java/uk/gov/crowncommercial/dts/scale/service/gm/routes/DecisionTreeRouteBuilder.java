@@ -25,6 +25,7 @@ public class DecisionTreeRouteBuilder extends EndpointRouteBuilder {
 
   private static final String JSON_BINDING = RestBindingMode.json.name();
   private static final String PATH_JOURNEYS = "/journeys";
+  private static final String ROUTE_DIRECT_FINALISE_RESPONSE = "direct:finalise-response";
 
   private final JourneyService journeyService;
   private final QuestionService questionService;
@@ -54,7 +55,7 @@ public class DecisionTreeRouteBuilder extends EndpointRouteBuilder {
     from("direct:search-journeys")
       .log(LoggingLevel.INFO, "Journey search invoked")
       .bean(journeyService, "searchJourneys(${headers[q]})")
-      .to("direct:finalise-response");
+      .to(ROUTE_DIRECT_FINALISE_RESPONSE);
 
     /*
      * Get journey questionInstance
@@ -69,7 +70,7 @@ public class DecisionTreeRouteBuilder extends EndpointRouteBuilder {
     from("direct:get-journey-questionInstance")
       .log(LoggingLevel.INFO, "Journey get questionInstance invoked")
       .bean(questionService, "getQuestion(${headers[question-uuid]})")
-      .to("direct:finalise-response");
+      .to(ROUTE_DIRECT_FINALISE_RESPONSE);
 
     /*
      * Get journey questionInstance outcome
@@ -91,9 +92,9 @@ public class DecisionTreeRouteBuilder extends EndpointRouteBuilder {
           .setHeader(Exchange.CONTENT_TYPE, constant("application/json"))
           .setBody(constant("{\"errors\":[]}"))
         .end()
-      .to("direct:finalise-response");
+      .to(ROUTE_DIRECT_FINALISE_RESPONSE);
 
-    from("direct:finalise-response")
+    from(ROUTE_DIRECT_FINALISE_RESPONSE)
       .removeHeaders("*")
       .setHeader("Access-Control-Allow-Origin", constant("*"));
 

@@ -1,8 +1,3 @@
-/**
- *
- * OutcomeException.java
- *
- */
 package uk.gov.crowncommercial.dts.scale.service.gm.exception;
 
 import java.util.Arrays;

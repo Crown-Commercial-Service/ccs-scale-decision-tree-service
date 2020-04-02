@@ -1,8 +1,3 @@
-/**
- *
- * LookupService.java
- *
- */
 package uk.gov.crowncommercial.dts.scale.service.gm.service;
 
 import static java.util.Arrays.asList;

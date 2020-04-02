@@ -1,8 +1,3 @@
-/**
- *
- * OutcomeService.java
- *
- */
 package uk.gov.crowncommercial.dts.scale.service.gm.service;
 
 import static java.lang.String.format;
@@ -106,6 +101,9 @@ public class OutcomeService {
   private Outcome resolveOutcome(final QuestionInstanceOutcome questionInstanceOutcome) {
     log.debug("Resolving Outcome for QuestionInstanceOutcome: {}", questionInstanceOutcome);
     if (questionInstanceOutcome instanceof QuestionInstance) {
+
+      // TODO: Investigate why, when cast to a QuestionInstance the entity is not fully hydrated.
+      // Refactor accordingly (should not be necessary to load same object from graph
       return new Outcome(OutcomeType.QUESTION,
           questionService.convertToQuestion(questionInstanceRepository
               .findById(((QuestionInstance) questionInstanceOutcome).getId(), 2).get()));
@@ -158,7 +156,7 @@ public class OutcomeService {
       case POSTCODE:
         throw new NotImplementedException("POSTCODE question type not implemented");
       default:
-        throw new RuntimeException("");
+        throw new AnswersValidationException("Unable to validate unsupported QuestionType");
     }
   }
 
