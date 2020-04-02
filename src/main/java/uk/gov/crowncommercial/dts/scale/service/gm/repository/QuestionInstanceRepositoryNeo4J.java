@@ -1,4 +1,4 @@
-package uk.gov.crowncommercial.dts.scale.service.gm.reposoitory;
+package uk.gov.crowncommercial.dts.scale.service.gm.repository;
 
 import java.util.Optional;
 import org.springframework.data.neo4j.annotation.Depth;

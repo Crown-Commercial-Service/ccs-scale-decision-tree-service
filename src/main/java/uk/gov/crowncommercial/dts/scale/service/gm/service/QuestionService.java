@@ -10,7 +10,7 @@ import uk.gov.crowncommercial.dts.scale.service.gm.model.DefinedAnswer;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.Question;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.ogm.QuestionDefinition;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.ogm.QuestionInstance;
-import uk.gov.crowncommercial.dts.scale.service.gm.reposoitory.QuestionInstanceRepositoryNeo4J;
+import uk.gov.crowncommercial.dts.scale.service.gm.repository.QuestionInstanceRepositoryNeo4J;
 
 /**
  * GM QuestionInstance Service component

@@ -10,7 +10,7 @@ import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
  *
  */
 @SpringBootApplication
-@EnableNeo4jRepositories("uk.gov.crowncommercial.dts.scale.service.gm.reposoitory")
+@EnableNeo4jRepositories("uk.gov.crowncommercial.dts.scale.service.gm.repository")
 @EntityScan({"uk.gov.crowncommercial.dts.scale.service.gm.model"})
 public class Application {
 

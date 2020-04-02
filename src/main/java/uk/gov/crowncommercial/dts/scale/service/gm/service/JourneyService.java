@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.ogm.Journey;
-import uk.gov.crowncommercial.dts.scale.service.gm.reposoitory.JourneyRepositoryNeo4J;
+import uk.gov.crowncommercial.dts.scale.service.gm.repository.JourneyRepositoryNeo4J;
 
 /**
  * GM Journeys service component

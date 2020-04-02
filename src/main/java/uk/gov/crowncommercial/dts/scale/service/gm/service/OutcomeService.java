@@ -21,8 +21,8 @@ import uk.gov.crowncommercial.dts.scale.service.gm.model.ogm.Agreement;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.ogm.Answer;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.ogm.QuestionInstance;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.ogm.QuestionInstanceOutcome;
-import uk.gov.crowncommercial.dts.scale.service.gm.reposoitory.OutcomeRepository;
-import uk.gov.crowncommercial.dts.scale.service.gm.reposoitory.QuestionInstanceRepositoryNeo4J;
+import uk.gov.crowncommercial.dts.scale.service.gm.repository.OutcomeRepository;
+import uk.gov.crowncommercial.dts.scale.service.gm.repository.QuestionInstanceRepositoryNeo4J;
 
 /**
  *
