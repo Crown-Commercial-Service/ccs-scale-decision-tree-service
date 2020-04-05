@@ -17,7 +17,7 @@ import uk.gov.crowncommercial.dts.scale.service.gm.model.Outcome;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.OutcomeType;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.QuestionAnswers;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.QuestionType;
-import uk.gov.crowncommercial.dts.scale.service.gm.model.ogm.Agreement;
+import uk.gov.crowncommercial.dts.scale.service.gm.model.ogm.Lot;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.ogm.Answer;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.ogm.QuestionInstance;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.ogm.QuestionInstanceOutcome;
@@ -39,7 +39,7 @@ public class OutcomeService {
 
   /**
    * Attempt to find an 'outcome' (a {@link QuestionInstanceOutcome} instance which is either a
-   * {@link QuestionInstance} or an {@link Agreement}) from firstly, the static answers defined in
+   * {@link QuestionInstance} or an {@link Lot}) from firstly, the static answers defined in
    * the graph model itself, and secondly from the dynamic lookup source. The result is then wrapped
    * in a new {@link Outcome} object and returned, or an exception thrown.
    *
@@ -107,8 +107,8 @@ public class OutcomeService {
       return new Outcome(OutcomeType.QUESTION,
           questionService.convertToQuestion(questionInstanceRepository
               .findById(((QuestionInstance) questionInstanceOutcome).getId(), 2).get()));
-    } else if (questionInstanceOutcome instanceof Agreement) {
-      return new Outcome(OutcomeType.AGREEMENT, (Agreement) questionInstanceOutcome);
+    } else if (questionInstanceOutcome instanceof Lot) {
+      return new Outcome(OutcomeType.LOT, (Lot) questionInstanceOutcome);
     } else {
       throw new ClassCastException(
           "Unknown QuestionInstanceOutcome type: " + questionInstanceOutcome.getClass());
