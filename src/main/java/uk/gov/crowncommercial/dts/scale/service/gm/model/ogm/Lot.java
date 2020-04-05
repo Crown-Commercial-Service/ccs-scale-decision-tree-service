@@ -5,11 +5,11 @@ import lombok.Data;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.OutcomeData;
 
 /**
- * GM Journey result
+ * Commercial agreement Lot (e.g. Linen and Laundry Services Lot 1b)
  */
 @Data
 @NodeEntity
-public class Agreement implements QuestionInstanceOutcome, OutcomeData {
+public class Lot implements QuestionInstanceOutcome, OutcomeData {
 
   String uuid;
   String name;
@@ -17,6 +17,6 @@ public class Agreement implements QuestionInstanceOutcome, OutcomeData {
   String agreementId;
   String url;
 
-  public Agreement() {/* Required by Neo4J OGM */}
+  public Lot() {/* Required by Neo4J OGM */}
 
 }
