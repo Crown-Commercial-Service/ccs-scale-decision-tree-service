@@ -15,6 +15,9 @@ public class Answer {
 
   String uuid;
   String text;
+  
+  @Nullable
+  String hint;
 
   @JsonProperty(access = Access.WRITE_ONLY)
   @Nullable
