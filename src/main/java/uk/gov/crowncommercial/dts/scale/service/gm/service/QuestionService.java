@@ -40,7 +40,9 @@ public class QuestionService {
         .flatMap(ag -> Optional.ofNullable(ag.getAnswers())
             .orElseGet(() -> lookupService.findAnswers(questionInstance.getUuid(), "housing"))
             .stream())
-        .map(a -> new DefinedAnswer(a.getUuid(), a.getText())).collect(Collectors.toSet());
+        .map(a -> DefinedAnswer.builder().uuid(a.getUuid()).text(a.getText()).hint(a.getHint())
+            .build())
+        .collect(Collectors.toSet());
 
     return Question.builder().uuid(questionInstance.getUuid()).text(qd.getText()).type(qd.getType())
         .hint(qd.getHint()).pattern(qd.getPattern()).definedAnswers(definedAnswers).build();
