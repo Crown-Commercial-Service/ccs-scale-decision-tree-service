@@ -13,5 +13,6 @@ public class DefinedAnswer {
   String uuid;
   String text;
   String hint;
+  int order;
 
 }
