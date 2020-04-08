@@ -48,7 +48,7 @@ public class QuestionService {
           return har.getAnswer();
         }).collect(Collectors.toSet()).stream();
       }
-      return lookupService.findAnswers(questionInstance.getUuid(), "housing").stream();
+      return lookupService.findAnswers(questionInstance.getUuid(), "TODO - modifier term").stream();
     }).map(a -> DefinedAnswer.builder().uuid(a.getUuid()).text(a.getText()).hint(a.getHint())
         .order(a.getOrder()).build()).sorted(Comparator.comparingInt(DefinedAnswer::getOrder))
         .collect(Collectors.toList());
