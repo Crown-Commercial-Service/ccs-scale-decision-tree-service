@@ -3,12 +3,15 @@ package uk.gov.crowncommercial.dts.scale.service.gm.model.ogm;
 import java.util.Set;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.experimental.FieldDefaults;
 
 /**
  * Guided Match QuestionInstance
  */
 @Data
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @NodeEntity
 public class QuestionInstance implements QuestionInstanceOutcome {
 
@@ -21,5 +24,4 @@ public class QuestionInstance implements QuestionInstanceOutcome {
   @Relationship(type = "DEFINED_BY", direction = Relationship.OUTGOING)
   QuestionDefinition questionDefinition;
 
-  public QuestionInstance() {/* Required by Neo4J OGM */}
 }

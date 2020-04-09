@@ -1,6 +1,6 @@
 package uk.gov.crowncommercial.dts.scale.service.gm.model;
 
-import java.util.Set;
+import java.util.List;
 import lombok.Builder;
 import lombok.Value;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.ogm.QuestionDefinition;
@@ -19,6 +19,6 @@ public class Question implements OutcomeData {
   String hint;
   String pattern;
   QuestionType type;
-  Set<DefinedAnswer> definedAnswers;
+  List<DefinedAnswer> definedAnswers;
 
 }
