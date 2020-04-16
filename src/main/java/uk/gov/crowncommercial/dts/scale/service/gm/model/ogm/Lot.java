@@ -5,7 +5,6 @@ import lombok.AccessLevel;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.JourneyResultType;
-import uk.gov.crowncommercial.dts.scale.service.gm.model.OutcomeData;
 
 /**
  * Commercial agreement Lot (e.g. Linen and Laundry Services Lot 1b)
@@ -13,10 +12,11 @@ import uk.gov.crowncommercial.dts.scale.service.gm.model.OutcomeData;
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @NodeEntity
-public class Lot implements QuestionInstanceOutcome, OutcomeData {
+public class Lot implements QuestionInstanceOutcome {
 
   String uuid;
-  String name;
+  String agreementName;
+  String lotName;
   String description;
   String agreementId;
   String url;

@@ -1,6 +1,6 @@
 package uk.gov.crowncommercial.dts.scale.service.gm.repository;
 
-import java.util.Optional;
+import java.util.List;
 import org.springframework.data.neo4j.annotation.Depth;
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
@@ -20,7 +20,7 @@ public interface OutcomeRepository extends Neo4jRepository<QuestionInstanceOutco
       + "OPTIONAL MATCH (outcome)-[rnag:HAS_ANSWER_GROUP]->(nag:AnswerGroup) "
       + "OPTIONAL MATCH (nag)-[na:HAS_ANSWER]->(a:Answer)  "
       + "RETURN outcome, r, qd, rnag, nag, na, a")
-  Optional<QuestionInstanceOutcome> findSingleStaticAnswerOutcome(
+  List<QuestionInstanceOutcome> findSingleStaticAnswerOutcome(
       @Param("currentQstnUuid") String currentQstnUuid, @Param("answerUuid") String answerUuid);
 
   @Query("MATCH (a:Answer) WHERE a.uuid IN $answerUuids " + "WITH collect(a) as answers "
@@ -31,7 +31,7 @@ public interface OutcomeRepository extends Neo4jRepository<QuestionInstanceOutco
       + "OPTIONAL MATCH (outcome)-[rnag:HAS_ANSWER_GROUP]->(nag:AnswerGroup) "
       + "OPTIONAL MATCH (nag)-[na:HAS_ANSWER]->(a:Answer) "
       + "RETURN outcome, r, qd, rnag, nag, na, a")
-  Optional<QuestionInstanceOutcome> findMultiStaticAnswerOutcome(
+  List<QuestionInstanceOutcome> findMultiStaticAnswerOutcome(
       @Param("currentQstnUuid") String currentQstnUuid, @Param("answerUuids") String[] answerUuids);
 
   @Query("MATCH (q:QuestionInstance {uuid: $currentQstnUuid})-[:HAS_ANSWER_GROUP]->(ag1:AnswerGroup)-[:MULTI_SELECT]->(outcome) "
@@ -39,10 +39,10 @@ public interface OutcomeRepository extends Neo4jRepository<QuestionInstanceOutco
       + "OPTIONAL MATCH (outcome)-[rnag:HAS_ANSWER_GROUP]->(nag:AnswerGroup) "
       + "OPTIONAL MATCH (nag)-[na:HAS_ANSWER]->(a:Answer) "
       + "RETURN outcome, r, qd, rnag, nag, na, a")
-  Optional<QuestionInstanceOutcome> findMultiDynamicAnswerOutcome(
+  List<QuestionInstanceOutcome> findMultiDynamicAnswerOutcome(
       @Param("currentQstnUuid") String currentQstnUuid);
 
   @Depth(2)
-  Optional<QuestionInstanceOutcome> findByUuid(String uuid);
+  List<QuestionInstanceOutcome> findByUuid(String uuid);
 
 }

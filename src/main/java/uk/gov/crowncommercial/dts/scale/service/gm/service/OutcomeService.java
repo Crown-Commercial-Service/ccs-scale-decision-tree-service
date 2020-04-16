@@ -5,7 +5,7 @@ import static java.util.Arrays.asList;
 import static uk.gov.crowncommercial.dts.scale.service.gm.model.QuestionType.BOOLEAN;
 import static uk.gov.crowncommercial.dts.scale.service.gm.model.QuestionType.LIST;
 import java.util.Arrays;
-import java.util.Optional;
+import java.util.List;
 import java.util.UUID;
 import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.stereotype.Service;
@@ -13,12 +13,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import uk.gov.crowncommercial.dts.scale.service.gm.exception.AnswersValidationException;
 import uk.gov.crowncommercial.dts.scale.service.gm.exception.OutcomeException;
-import uk.gov.crowncommercial.dts.scale.service.gm.model.Outcome;
-import uk.gov.crowncommercial.dts.scale.service.gm.model.OutcomeType;
-import uk.gov.crowncommercial.dts.scale.service.gm.model.QuestionAnswers;
-import uk.gov.crowncommercial.dts.scale.service.gm.model.QuestionType;
-import uk.gov.crowncommercial.dts.scale.service.gm.model.ogm.Lot;
+import uk.gov.crowncommercial.dts.scale.service.gm.model.*;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.ogm.Answer;
+import uk.gov.crowncommercial.dts.scale.service.gm.model.ogm.Lot;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.ogm.QuestionInstance;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.ogm.QuestionInstanceOutcome;
 import uk.gov.crowncommercial.dts.scale.service.gm.repository.OutcomeRepository;
@@ -39,9 +36,9 @@ public class OutcomeService {
 
   /**
    * Attempt to find an 'outcome' (a {@link QuestionInstanceOutcome} instance which is either a
-   * {@link QuestionInstance} or an {@link Lot}) from firstly, the static answers defined in
-   * the graph model itself, and secondly from the dynamic lookup source. The result is then wrapped
-   * in a new {@link Outcome} object and returned, or an exception thrown.
+   * {@link QuestionInstance} or an {@link Lot}) from firstly, the static answers defined in the
+   * graph model itself, and secondly from the dynamic lookup source. The result is then wrapped in
+   * a new {@link Outcome} object and returned, or an exception thrown.
    *
    * @param currentQstnUuid
    * @param answerUuid
@@ -59,7 +56,7 @@ public class OutcomeService {
     validateQuestionAnswers(currentQuestionInstance, questionAnswers);
 
     QuestionType questionType = currentQuestionInstance.getQuestionDefinition().getType();
-    Optional<QuestionInstanceOutcome> optOutcome;
+    List<QuestionInstanceOutcome> optOutcome;
 
     // Treat MULTI_SELECT questions as if they are LIST/BOOLEAN when only single answer selected:
     if (asList(BOOLEAN, LIST).contains(questionType)
@@ -70,7 +67,7 @@ public class OutcomeService {
           outcomeRepo.findSingleStaticAnswerOutcome(currentQstnUuid, questionAnswers.getData()[0]);
       log.debug("Single answer outcome retrieval from graph via static answers: {}", optOutcome);
 
-      if (!optOutcome.isPresent()) {
+      if (optOutcome.isEmpty()) {
         Answer answer = lookupService.getAnswer(questionAnswers.getData()[0]);
         optOutcome = outcomeRepo.findByUuid(answer.getOutcomeUuid());
         log.debug("Single answer outcome retrieval from graph lookup service answers: {}",
@@ -82,7 +79,7 @@ public class OutcomeService {
           outcomeRepo.findMultiStaticAnswerOutcome(currentQstnUuid, questionAnswers.getData());
       log.debug("Multi answer outcome retrieval from graph via static answers: {}", optOutcome);
 
-      if (!optOutcome.isPresent()) {
+      if (optOutcome.isEmpty()) {
         optOutcome = outcomeRepo.findMultiDynamicAnswerOutcome(currentQstnUuid);
         log.debug("Multi answer outcome retrieval from graph (dynamic answers): {}", optOutcome);
       }
@@ -90,29 +87,40 @@ public class OutcomeService {
       throw new AnswersValidationException("Question / answer type not currently supported");
     }
 
-    if (optOutcome.isPresent()) {
-      return resolveOutcome(optOutcome.get());
+    if (optOutcome.size() > 0) {
+      return resolveOutcome(optOutcome);
     }
 
     // Graph is malformed or lookup service does not contain outcome
     throw new OutcomeException(currentQstnUuid, questionAnswers.getData());
   }
 
-  private Outcome resolveOutcome(final QuestionInstanceOutcome questionInstanceOutcome) {
-    log.debug("Resolving Outcome for QuestionInstanceOutcome: {}", questionInstanceOutcome);
-    if (questionInstanceOutcome instanceof QuestionInstance) {
+  private Outcome resolveOutcome(final List<QuestionInstanceOutcome> questionInstanceOutcomes) {
+    log.debug("Resolving Outcome for QuestionInstanceOutcome: {}", questionInstanceOutcomes);
+    if (questionInstanceOutcomes.size() == 1
+        && questionInstanceOutcomes.get(0) instanceof QuestionInstance) {
 
       // TODO: Investigate why, when cast to a QuestionInstance the entity is not fully hydrated.
       // Refactor accordingly (should not be necessary to load same object from graph
       return new Outcome(OutcomeType.QUESTION,
           questionService.convertToQuestion(questionInstanceRepository
-              .findById(((QuestionInstance) questionInstanceOutcome).getId(), 2).get()));
-    } else if (questionInstanceOutcome instanceof Lot) {
-      return new Outcome(OutcomeType.LOT, (Lot) questionInstanceOutcome);
+              .findById(((QuestionInstance) questionInstanceOutcomes.get(0)).getId(), 2).get()));
+    } else if (allLots(questionInstanceOutcomes)) {
+      return new Outcome(OutcomeType.LOT, LotList.fromItems(questionInstanceOutcomes));
     } else {
-      throw new ClassCastException(
-          "Unknown QuestionInstanceOutcome type: " + questionInstanceOutcome.getClass());
+      throw new IllegalStateException(
+          "Found either multiple QuestionInstance outcomes or mixture of Lot/other outcome"
+              + questionInstanceOutcomes);
     }
+  }
+
+  private boolean allLots(final List<QuestionInstanceOutcome> questionInstanceOutcomes) {
+    for (QuestionInstanceOutcome qic : questionInstanceOutcomes) {
+      if (!(qic instanceof Lot)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   private void validateQuestionAnswers(final QuestionInstance currentQuestionInstance,

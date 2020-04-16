@@ -19,7 +19,7 @@ public class JourneyService {
   private final JourneyRepositoryNeo4J journeyRepo;
 
   public Collection<Journey> searchJourneys(final String searchTerm) {
-    List<Journey> journeys = journeyRepo.findBySearchTermsContains(searchTerm);
+    List<Journey> journeys = journeyRepo.findBySearchTermsContains(searchTerm.toLowerCase());
     log.debug("Found {} journeys. {}", journeys.size(), journeys);
 
     return journeys;
