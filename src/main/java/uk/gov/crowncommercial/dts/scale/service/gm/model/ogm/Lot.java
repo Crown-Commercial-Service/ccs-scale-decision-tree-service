@@ -17,9 +17,11 @@ public class Lot implements QuestionInstanceOutcome {
   String uuid;
   String agreementName;
   String lotName;
-  String description;
+  String agreementDescription;
+  String lotDescription;
   String agreementId;
   String url;
   JourneyResultType type;
+  boolean scale;
 
 }
