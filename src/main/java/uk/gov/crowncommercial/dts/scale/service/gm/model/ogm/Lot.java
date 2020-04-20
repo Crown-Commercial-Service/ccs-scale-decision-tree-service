@@ -5,6 +5,7 @@ import lombok.AccessLevel;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.JourneyResultType;
+import uk.gov.crowncommercial.dts.scale.service.gm.model.RouteToMarket;
 
 /**
  * Commercial agreement Lot (e.g. Linen and Laundry Services Lot 1b)
@@ -22,6 +23,7 @@ public class Lot implements QuestionInstanceOutcome {
   String agreementId;
   String url;
   JourneyResultType type;
+  RouteToMarket routeToMarket;
   boolean scale;
 
 }
