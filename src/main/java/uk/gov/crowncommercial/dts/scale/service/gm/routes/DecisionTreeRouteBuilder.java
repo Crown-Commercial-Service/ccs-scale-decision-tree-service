@@ -7,8 +7,8 @@ import org.apache.camel.builder.endpoint.EndpointRouteBuilder;
 import org.apache.camel.model.rest.RestParamType;
 import org.springframework.stereotype.Component;
 import lombok.RequiredArgsConstructor;
+import uk.gov.crowncommercial.dts.scale.service.gm.model.AnsweredQuestion;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.Outcome;
-import uk.gov.crowncommercial.dts.scale.service.gm.model.QuestionAnswers;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.ogm.Journey;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.ogm.QuestionInstance;
 import uk.gov.crowncommercial.dts.scale.service.gm.service.JourneyService;
@@ -77,7 +77,7 @@ public class DecisionTreeRouteBuilder extends EndpointRouteBuilder {
      */
     rest()
       .post(PATH_JOURNEYS + "/{uuid}/questions/{question-uuid}/outcome")
-      .type(QuestionAnswers.class)
+      .type(AnsweredQuestion[].class)
       .outType(Outcome.class)
       .param().name("uuid").type(RestParamType.path).required(TRUE).endParam()
       .param().name("question-uuid").type(RestParamType.path).required(TRUE).endParam()

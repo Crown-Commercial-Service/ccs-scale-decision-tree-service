@@ -22,6 +22,6 @@ public class QuestionInstance implements QuestionInstanceOutcome {
   Set<AnswerGroup> answerGroups;
 
   @Relationship(type = "DEFINED_BY", direction = Relationship.OUTGOING)
-  QuestionDefinition questionDefinition;
+  Question question;
 
 }

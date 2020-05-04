@@ -4,7 +4,7 @@ import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static uk.gov.crowncommercial.dts.scale.service.gm.model.QuestionType.BOOLEAN;
 import static uk.gov.crowncommercial.dts.scale.service.gm.model.QuestionType.LIST;
-import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import org.apache.commons.lang3.NotImplementedException;
@@ -40,43 +40,48 @@ public class OutcomeService {
    * graph model itself, and secondly from the dynamic lookup source. The result is then wrapped in
    * a new {@link Outcome} object and returned, or an exception thrown.
    *
-   * @param currentQstnUuid
-   * @param answerUuid
+   * @param currentQstnUuid the current, primary question instance UUID
+   * @param answeredQuestions an array of answered questions
    * @return an Outcome instance containing either a question instance or an agreement
    * @throws OutcomeException if no outcome is discovered
    */
   public Outcome getQuestionInstanceOutcome(final String currentQstnUuid,
-      final QuestionAnswers questionAnswers) {
+      final AnsweredQuestion[] answeredQuestions) {
 
     QuestionInstance currentQuestionInstance =
         questionInstanceRepository.findByUuid(currentQstnUuid)
             .orElseThrow(() -> new RuntimeException("TODO: QuestionInstance not found etc"));
 
-    // Validate the incoming answers against the current question type:
-    validateQuestionAnswers(currentQuestionInstance, questionAnswers);
+    // TODO: In the future must handle multi-questions per 'page'
+    AnsweredQuestion firstAnsweredQuestion = answeredQuestions[0];
 
-    QuestionType questionType = currentQuestionInstance.getQuestionDefinition().getType();
+    // Validate the incoming answers against the current question type:
+    validateQuestionAnswers(currentQuestionInstance, firstAnsweredQuestion);
+
+    QuestionType questionType = currentQuestionInstance.getQuestion().getType();
     List<QuestionInstanceOutcome> optOutcome;
 
     // Treat MULTI_SELECT questions as if they are LIST/BOOLEAN when only single answer selected:
     if (asList(BOOLEAN, LIST).contains(questionType)
         || (questionType.equals(QuestionType.MULTI_SELECT_LIST)
-            && questionAnswers.getData().length == 1)) {
+            && firstAnsweredQuestion.getAnswers().size() == 1)) {
 
-      optOutcome =
-          outcomeRepo.findSingleStaticAnswerOutcome(currentQstnUuid, questionAnswers.getData()[0]);
+      final String firstAnswer = firstAnsweredQuestion.getAnswers().stream().findFirst()
+          .orElseThrow(() -> new RuntimeException("new"));
+
+      optOutcome = outcomeRepo.findSingleStaticAnswerOutcome(currentQstnUuid, firstAnswer);
       log.debug("Single answer outcome retrieval from graph via static answers: {}", optOutcome);
 
       if (optOutcome.isEmpty()) {
-        Answer answer = lookupService.getAnswer(questionAnswers.getData()[0]);
+        Answer answer = lookupService.getAnswer(firstAnswer);
         optOutcome = outcomeRepo.findByUuid(answer.getOutcomeUuid());
         log.debug("Single answer outcome retrieval from graph lookup service answers: {}",
             optOutcome);
       }
     } else if (questionType.equals(QuestionType.MULTI_SELECT_LIST)) {
 
-      optOutcome =
-          outcomeRepo.findMultiStaticAnswerOutcome(currentQstnUuid, questionAnswers.getData());
+      optOutcome = outcomeRepo.findMultiStaticAnswerOutcome(currentQstnUuid,
+          firstAnsweredQuestion.getAnswers());
       log.debug("Multi answer outcome retrieval from graph via static answers: {}", optOutcome);
 
       if (optOutcome.isEmpty()) {
@@ -87,12 +92,12 @@ public class OutcomeService {
       throw new AnswersValidationException("Question / answer type not currently supported");
     }
 
-    if (optOutcome.size() > 0) {
+    if (!optOutcome.isEmpty()) {
       return resolveOutcome(optOutcome);
     }
 
     // Graph is malformed or lookup service does not contain outcome
-    throw new OutcomeException(currentQstnUuid, questionAnswers.getData());
+    throw new OutcomeException(currentQstnUuid, firstAnsweredQuestion.getAnswers());
   }
 
   private Outcome resolveOutcome(final List<QuestionInstanceOutcome> questionInstanceOutcomes) {
@@ -124,32 +129,32 @@ public class OutcomeService {
   }
 
   private void validateQuestionAnswers(final QuestionInstance currentQuestionInstance,
-      final QuestionAnswers questionAnswers) {
+      final AnsweredQuestion answeredQuestion) {
 
-    log.debug("Validating answers: {} for question instance: {}",
-        Arrays.toString(questionAnswers.getData()), currentQuestionInstance.getUuid());
+    log.debug("Validating answers: {} for question instance: {}", answeredQuestion.getAnswers(),
+        currentQuestionInstance.getUuid());
 
-    switch (currentQuestionInstance.getQuestionDefinition().getType()) {
+    switch (currentQuestionInstance.getQuestion().getType()) {
 
       case BOOLEAN:
-        if (questionAnswers.getData().length != 1) {
+        if (answeredQuestion.getAnswers().size() != 1) {
           throw new AnswersValidationException(
               "Question type 'boolean' expects single answer value");
         }
-        validateUuids(questionAnswers.getData());
+        validateUuids(answeredQuestion.getAnswers());
         break;
       case LIST:
-        if (questionAnswers.getData().length != 1) {
+        if (answeredQuestion.getAnswers().size() != 1) {
           throw new AnswersValidationException("Question type 'list' expects single answer value");
         }
-        validateUuids(questionAnswers.getData());
+        validateUuids(answeredQuestion.getAnswers());
         break;
       case MULTI_SELECT_LIST:
-        if (questionAnswers.getData().length < 1) {
+        if (answeredQuestion.getAnswers().isEmpty()) {
           throw new AnswersValidationException(
               "Question type 'multiSelectList' expects one or more answer values");
         }
-        validateUuids(questionAnswers.getData());
+        validateUuids(answeredQuestion.getAnswers());
         break;
       case TEXT_INPUT:
         throw new NotImplementedException("TEXT_INPUT question type not implemented");
@@ -168,7 +173,7 @@ public class OutcomeService {
     }
   }
 
-  private void validateUuids(final String[] answerValues) {
+  private void validateUuids(final Collection<String> answerValues) {
     for (String ans : answerValues) {
       try {
         UUID.fromString(ans);

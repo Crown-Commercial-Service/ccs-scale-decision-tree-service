@@ -8,10 +8,10 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import uk.gov.crowncommercial.dts.scale.service.gm.model.DefinedAnswer;
-import uk.gov.crowncommercial.dts.scale.service.gm.model.Question;
+import uk.gov.crowncommercial.dts.scale.service.gm.model.AnswerDefinition;
+import uk.gov.crowncommercial.dts.scale.service.gm.model.QuestionDefinition;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.ogm.HasAnswer;
-import uk.gov.crowncommercial.dts.scale.service.gm.model.ogm.QuestionDefinition;
+import uk.gov.crowncommercial.dts.scale.service.gm.model.ogm.Question;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.ogm.QuestionInstance;
 import uk.gov.crowncommercial.dts.scale.service.gm.repository.QuestionInstanceRepositoryNeo4J;
 
@@ -26,7 +26,7 @@ public class QuestionService {
   private final QuestionInstanceRepositoryNeo4J questionRepository;
   private final LookupService lookupService;
 
-  public Question getQuestion(final String uuid) {
+  public QuestionDefinition getQuestion(final String uuid) {
     Optional<QuestionInstance> questionInstance = questionRepository.findByUuid(uuid);
 
     if (questionInstance.isPresent()) {
@@ -35,26 +35,30 @@ public class QuestionService {
     return null;
   }
 
-  public Question convertToQuestion(final QuestionInstance questionInstance) {
+  public QuestionDefinition convertToQuestion(final QuestionInstance questionInstance) {
     log.debug("Converting QuestionInstance: {}", questionInstance);
-    QuestionDefinition qd = questionInstance.getQuestionDefinition();
+    Question question = questionInstance.getQuestion();
 
-    List<DefinedAnswer> definedAnswers = questionInstance.getAnswerGroups().stream().flatMap(ag -> {
-      Optional<Set<HasAnswer>> hasAnswerRels = Optional.ofNullable(ag.getHasAnswerRels());
+    List<AnswerDefinition> answerDefinitions =
+        questionInstance.getAnswerGroups().stream().flatMap(ag -> {
+          Optional<Set<HasAnswer>> hasAnswerRels = Optional.ofNullable(ag.getHasAnswerRels());
 
-      if (hasAnswerRels.isPresent()) {
-        return hasAnswerRels.get().stream().map(har -> {
-          har.getAnswer().setOrder(har.getOrder());
-          return har.getAnswer();
-        }).collect(Collectors.toSet()).stream();
-      }
-      return lookupService.findAnswers(questionInstance.getUuid(), "TODO - modifier term").stream();
-    }).map(a -> DefinedAnswer.builder().uuid(a.getUuid()).text(a.getText()).hint(a.getHint())
-        .order(a.getOrder()).build()).sorted(Comparator.comparingInt(DefinedAnswer::getOrder))
-        .collect(Collectors.toList());
+          if (hasAnswerRels.isPresent()) {
+            return hasAnswerRels.get().stream().map(har -> {
+              har.getAnswer().setOrder(har.getOrder());
+              return har.getAnswer();
+            }).collect(Collectors.toSet()).stream();
+          }
+          return lookupService.findAnswers(questionInstance.getUuid(), "TODO - modifier term")
+              .stream();
+        }).map(a -> AnswerDefinition.builder().uuid(a.getUuid()).text(a.getText()).hint(a.getHint())
+            .order(a.getOrder()).build())
+            .sorted(Comparator.comparingInt(AnswerDefinition::getOrder))
+            .collect(Collectors.toList());
 
-    return Question.builder().uuid(questionInstance.getUuid()).text(qd.getText()).type(qd.getType())
-        .hint(qd.getHint()).pattern(qd.getPattern()).definedAnswers(definedAnswers).build();
+    return QuestionDefinition.builder().uuid(questionInstance.getUuid()).text(question.getText())
+        .type(question.getType()).hint(question.getHint()).pattern(question.getPattern())
+        .answerDefinitions(answerDefinitions).build();
   }
 
 }

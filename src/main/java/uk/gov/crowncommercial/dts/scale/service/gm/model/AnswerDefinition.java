@@ -8,7 +8,7 @@ import lombok.Value;
  */
 @Value
 @Builder
-public class DefinedAnswer {
+public class AnswerDefinition {
 
   String uuid;
   String text;
