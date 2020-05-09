@@ -14,5 +14,10 @@ public class DefinedAnswer {
   String text;
   String hint;
   int order;
+  ConditionalInput conditionalInput;
+
+  public static void main(final String[] args) {
+    System.out.println(Long.MAX_VALUE);
+  }
 
 }

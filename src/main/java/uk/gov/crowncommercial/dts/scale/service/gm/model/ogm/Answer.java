@@ -19,4 +19,7 @@ public class Answer {
   String hint;
   String outcomeUuid;
 
+  // Prototype..
+  String conditionalInputText;
+  String conditionalInputHint;
 }

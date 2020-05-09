@@ -22,6 +22,9 @@ public class AnswerGroup {
   Set<HasAnswer> hasAnswerRels;
 
   @Relationship(type = "HAS_OUTCOME", direction = Relationship.OUTGOING)
+  Set<HasOutcome> hasOutcomeRels;
+
+  @Relationship(type = "HAS_OUTCOME", direction = Relationship.OUTGOING)
   Set<QuestionInstanceOutcome> questionInstanceOutcomes;
 
 }

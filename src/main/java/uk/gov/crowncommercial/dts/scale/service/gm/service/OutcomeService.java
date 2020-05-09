@@ -63,26 +63,29 @@ public class OutcomeService {
         || (questionType.equals(QuestionType.MULTI_SELECT_LIST)
             && questionAnswers.getData().length == 1)) {
 
-      optOutcome =
-          outcomeRepo.findSingleStaticAnswerOutcome(currentQstnUuid, questionAnswers.getData()[0]);
+      optOutcome = outcomeRepo.findSingleStaticAnswerOutcome(currentQstnUuid,
+          questionAnswers.getData()[0].getUuid());
       log.debug("Single answer outcome retrieval from graph via static answers: {}", optOutcome);
 
       if (optOutcome.isEmpty()) {
-        Answer answer = lookupService.getAnswer(questionAnswers.getData()[0]);
+        Answer answer = lookupService.getAnswer(questionAnswers.getData()[0].getUuid());
         optOutcome = outcomeRepo.findByUuid(answer.getOutcomeUuid());
         log.debug("Single answer outcome retrieval from graph lookup service answers: {}",
             optOutcome);
       }
     } else if (questionType.equals(QuestionType.MULTI_SELECT_LIST)) {
 
-      optOutcome =
-          outcomeRepo.findMultiStaticAnswerOutcome(currentQstnUuid, questionAnswers.getData());
+      optOutcome = outcomeRepo.findMultiStaticAnswerOutcome(currentQstnUuid,
+          extractUuids(questionAnswers.getData()));
       log.debug("Multi answer outcome retrieval from graph via static answers: {}", optOutcome);
 
       if (optOutcome.isEmpty()) {
         optOutcome = outcomeRepo.findMultiDynamicAnswerOutcome(currentQstnUuid);
         log.debug("Multi answer outcome retrieval from graph (dynamic answers): {}", optOutcome);
       }
+    } else if (questionType.equals(QuestionType.CONDITIONAL_NUMERIC_INPUT)) {
+      // TODO: Implement!
+      throw new AnswersValidationException("TODO - new query type!!");
     } else {
       throw new AnswersValidationException("Question / answer type not currently supported");
     }
@@ -136,20 +139,23 @@ public class OutcomeService {
           throw new AnswersValidationException(
               "Question type 'boolean' expects single answer value");
         }
-        validateUuids(questionAnswers.getData());
+        validateUuids(extractUuids(questionAnswers.getData()));
         break;
       case LIST:
         if (questionAnswers.getData().length != 1) {
           throw new AnswersValidationException("Question type 'list' expects single answer value");
         }
-        validateUuids(questionAnswers.getData());
+        validateUuids(extractUuids(questionAnswers.getData()));
         break;
       case MULTI_SELECT_LIST:
         if (questionAnswers.getData().length < 1) {
           throw new AnswersValidationException(
               "Question type 'multiSelectList' expects one or more answer values");
         }
-        validateUuids(questionAnswers.getData());
+        validateUuids(extractUuids(questionAnswers.getData()));
+        break;
+      case CONDITIONAL_NUMERIC_INPUT:
+        // TODO
         break;
       case TEXT_INPUT:
         throw new NotImplementedException("TEXT_INPUT question type not implemented");
@@ -177,6 +183,10 @@ public class OutcomeService {
             format("Invalid UUID: %s, msg: %s", ans, ex.getMessage()));
       }
     }
+  }
+
+  private String[] extractUuids(final GivenAnswer[] givenAnswers) {
+    return Arrays.stream(givenAnswers).map(GivenAnswer::getUuid).toArray(String[]::new);
   }
 
 }
