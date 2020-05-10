@@ -2,7 +2,10 @@ package uk.gov.crowncommercial.dts.scale.service.gm.service;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static uk.gov.crowncommercial.dts.scale.service.gm.model.QuestionType.BOOLEAN;
+import static uk.gov.crowncommercial.dts.scale.service.gm.model.QuestionType.CONDITIONAL_NUMERIC_INPUT;
 import static uk.gov.crowncommercial.dts.scale.service.gm.model.QuestionType.LIST;
 import static uk.gov.crowncommercial.dts.scale.service.gm.model.QuestionType.MULTI_SELECT_LIST;
 import java.util.Arrays;
@@ -61,9 +64,14 @@ public class OutcomeService {
     QuestionType questionType = currentQuestionInstance.getQuestionDefinition().getType();
     List<QuestionInstanceOutcome> optOutcome;
 
-    // Treat MULTI_SELECT questions as if they are LIST/BOOLEAN when only single answer selected:
+    /*
+     * Treat MULTI_SELECT questions as if they are LIST/BOOLEAN when only single answer selected.
+     * Likewise CONDITIONAL_NUMERIC_INPUT when no value given
+     */
     if (asList(BOOLEAN, LIST).contains(questionType)
-        || (questionType.equals(MULTI_SELECT_LIST) && givenAnswers.length == 1)) {
+        || (questionType.equals(MULTI_SELECT_LIST) && givenAnswers.length == 1)
+        || (questionType.equals(CONDITIONAL_NUMERIC_INPUT) && givenAnswers.length == 1
+            && isBlank(givenAnswers[0].getValue()))) {
 
       optOutcome =
           outcomeRepo.findSingleStaticAnswerOutcome(currentQstnUuid, givenAnswers[0].getUuid());
@@ -85,17 +93,17 @@ public class OutcomeService {
         optOutcome = outcomeRepo.findMultiDynamicAnswerOutcome(currentQstnUuid);
         log.debug("Multi answer outcome retrieval from graph (dynamic answers): {}", optOutcome);
       }
-    } else if (questionType.equals(QuestionType.CONDITIONAL_NUMERIC_INPUT)
-        && givenAnswers.length == 1) {
+    } else if (questionType.equals(CONDITIONAL_NUMERIC_INPUT) && givenAnswers.length == 1
+        && isNotBlank(givenAnswers[0].getValue())) {
 
       optOutcome = outcomeRepo.findSingleStaticConditionalNumericAnswerOutcome(currentQstnUuid,
-          givenAnswers[0].getUuid(), givenAnswers[0].getValue());
-
+          givenAnswers[0].getUuid(), Double.parseDouble(givenAnswers[0].getValue()));
+      log.debug("Single conditional numeric input answer retrieval from graph: {}", optOutcome);
     } else {
       throw new AnswersValidationException("Question / answer type not currently supported");
     }
 
-    if (optOutcome.size() > 0) {
+    if (!optOutcome.isEmpty()) {
       return resolveOutcome(optOutcome);
     }
 

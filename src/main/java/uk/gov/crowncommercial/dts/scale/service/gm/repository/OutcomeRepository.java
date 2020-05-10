@@ -54,6 +54,6 @@ public interface OutcomeRepository extends Neo4jRepository<QuestionInstanceOutco
       + "RETURN outcome, r, qd, rnag, nag, na, a")
   List<QuestionInstanceOutcome> findSingleStaticConditionalNumericAnswerOutcome(
       @Param("currentQstnUuid") String currentQstnUuid, @Param("answerUuid") String answerUuid,
-      @Param("answerValue") String answerValue);
+      @Param("answerValue") Double answerValue);
 
 }
