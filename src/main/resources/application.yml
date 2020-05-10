@@ -22,6 +22,7 @@ logging:
     org.neo4j.ogm: INFO
     
 server:
+  port: 9000
   tomcat:
     accesslog:
       enabled: true
@@ -38,4 +39,14 @@ external:
     uri-templates:
       find-answers: "/answers?question-instance-uuid={question-instance-uuid}&modifier={modifier}}"
       get-answer: /answers/{answer-uuid}     
+      
+---
+spring:
+  profiles: local
+camel:
+  component:
+    servlet:
+      mapping:
+        # Mimic API Gateway path prefix (allows switching envs between local and AWS in Postman)
+        contextPath: /decision-tree/*
       
