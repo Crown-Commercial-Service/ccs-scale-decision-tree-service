@@ -33,5 +33,8 @@ public enum QuestionType {
   POSTCODE,
 
   @JsonProperty("nuts")
-  NUTS;
+  NUTS,
+
+  @JsonProperty("conditionalNumericInput")
+  CONDITIONAL_NUMERIC_INPUT;
 }

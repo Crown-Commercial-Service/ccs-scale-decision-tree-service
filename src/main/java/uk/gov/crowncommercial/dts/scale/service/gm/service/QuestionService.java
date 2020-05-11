@@ -1,13 +1,16 @@
 package uk.gov.crowncommercial.dts.scale.service.gm.service;
 
+import static uk.gov.crowncommercial.dts.scale.service.gm.model.QuestionType.CONDITIONAL_NUMERIC_INPUT;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import uk.gov.crowncommercial.dts.scale.service.gm.model.ConditionalInput;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.DefinedAnswer;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.Question;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.ogm.HasAnswer;
@@ -50,7 +53,12 @@ public class QuestionService {
       }
       return lookupService.findAnswers(questionInstance.getUuid(), "TODO - modifier term").stream();
     }).map(a -> DefinedAnswer.builder().uuid(a.getUuid()).text(a.getText()).hint(a.getHint())
-        .order(a.getOrder()).build()).sorted(Comparator.comparingInt(DefinedAnswer::getOrder))
+        .order(a.getOrder())
+        .conditionalInput(qd.getType() == CONDITIONAL_NUMERIC_INPUT
+            && StringUtils.isNotBlank(a.getConditionalInputText())
+                ? new ConditionalInput(a.getConditionalInputText(), a.getConditionalInputHint())
+                : null)
+        .build()).sorted(Comparator.comparingInt(DefinedAnswer::getOrder))
         .collect(Collectors.toList());
 
     return Question.builder().uuid(questionInstance.getUuid()).text(qd.getText()).type(qd.getType())

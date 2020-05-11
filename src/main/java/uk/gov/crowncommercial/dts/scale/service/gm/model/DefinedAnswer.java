@@ -14,5 +14,6 @@ public class DefinedAnswer {
   String text;
   String hint;
   int order;
+  ConditionalInput conditionalInput;
 
 }

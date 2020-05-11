@@ -2,8 +2,12 @@ package uk.gov.crowncommercial.dts.scale.service.gm.service;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static uk.gov.crowncommercial.dts.scale.service.gm.model.QuestionType.BOOLEAN;
+import static uk.gov.crowncommercial.dts.scale.service.gm.model.QuestionType.CONDITIONAL_NUMERIC_INPUT;
 import static uk.gov.crowncommercial.dts.scale.service.gm.model.QuestionType.LIST;
+import static uk.gov.crowncommercial.dts.scale.service.gm.model.QuestionType.MULTI_SELECT_LIST;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -52,47 +56,59 @@ public class OutcomeService {
         questionInstanceRepository.findByUuid(currentQstnUuid)
             .orElseThrow(() -> new RuntimeException("TODO: QuestionInstance not found etc"));
 
+    GivenAnswer[] givenAnswers = questionAnswers.getData();
+
     // Validate the incoming answers against the current question type:
     validateQuestionAnswers(currentQuestionInstance, questionAnswers);
 
     QuestionType questionType = currentQuestionInstance.getQuestionDefinition().getType();
     List<QuestionInstanceOutcome> optOutcome;
 
-    // Treat MULTI_SELECT questions as if they are LIST/BOOLEAN when only single answer selected:
+    /*
+     * Treat MULTI_SELECT questions as if they are LIST/BOOLEAN when only single answer selected.
+     * Likewise CONDITIONAL_NUMERIC_INPUT when no value given
+     */
     if (asList(BOOLEAN, LIST).contains(questionType)
-        || (questionType.equals(QuestionType.MULTI_SELECT_LIST)
-            && questionAnswers.getData().length == 1)) {
+        || (questionType.equals(MULTI_SELECT_LIST) && givenAnswers.length == 1)
+        || (questionType.equals(CONDITIONAL_NUMERIC_INPUT) && givenAnswers.length == 1
+            && isBlank(givenAnswers[0].getValue()))) {
 
       optOutcome =
-          outcomeRepo.findSingleStaticAnswerOutcome(currentQstnUuid, questionAnswers.getData()[0]);
+          outcomeRepo.findSingleStaticAnswerOutcome(currentQstnUuid, givenAnswers[0].getUuid());
       log.debug("Single answer outcome retrieval from graph via static answers: {}", optOutcome);
 
       if (optOutcome.isEmpty()) {
-        Answer answer = lookupService.getAnswer(questionAnswers.getData()[0]);
+        Answer answer = lookupService.getAnswer(givenAnswers[0].getUuid());
         optOutcome = outcomeRepo.findByUuid(answer.getOutcomeUuid());
         log.debug("Single answer outcome retrieval from graph lookup service answers: {}",
             optOutcome);
       }
-    } else if (questionType.equals(QuestionType.MULTI_SELECT_LIST)) {
+    } else if (questionType.equals(MULTI_SELECT_LIST)) {
 
       optOutcome =
-          outcomeRepo.findMultiStaticAnswerOutcome(currentQstnUuid, questionAnswers.getData());
+          outcomeRepo.findMultiStaticAnswerOutcome(currentQstnUuid, extractUuids(givenAnswers));
       log.debug("Multi answer outcome retrieval from graph via static answers: {}", optOutcome);
 
       if (optOutcome.isEmpty()) {
         optOutcome = outcomeRepo.findMultiDynamicAnswerOutcome(currentQstnUuid);
         log.debug("Multi answer outcome retrieval from graph (dynamic answers): {}", optOutcome);
       }
+    } else if (questionType.equals(CONDITIONAL_NUMERIC_INPUT) && givenAnswers.length == 1
+        && isNotBlank(givenAnswers[0].getValue())) {
+
+      optOutcome = outcomeRepo.findSingleStaticConditionalNumericAnswerOutcome(currentQstnUuid,
+          givenAnswers[0].getUuid(), Double.parseDouble(givenAnswers[0].getValue()));
+      log.debug("Single conditional numeric input answer retrieval from graph: {}", optOutcome);
     } else {
       throw new AnswersValidationException("Question / answer type not currently supported");
     }
 
-    if (optOutcome.size() > 0) {
+    if (!optOutcome.isEmpty()) {
       return resolveOutcome(optOutcome);
     }
 
     // Graph is malformed or lookup service does not contain outcome
-    throw new OutcomeException(currentQstnUuid, questionAnswers.getData());
+    throw new OutcomeException(currentQstnUuid, givenAnswers);
   }
 
   private Outcome resolveOutcome(final List<QuestionInstanceOutcome> questionInstanceOutcomes) {
@@ -136,20 +152,23 @@ public class OutcomeService {
           throw new AnswersValidationException(
               "Question type 'boolean' expects single answer value");
         }
-        validateUuids(questionAnswers.getData());
+        validateUuids(extractUuids(questionAnswers.getData()));
         break;
       case LIST:
         if (questionAnswers.getData().length != 1) {
           throw new AnswersValidationException("Question type 'list' expects single answer value");
         }
-        validateUuids(questionAnswers.getData());
+        validateUuids(extractUuids(questionAnswers.getData()));
         break;
       case MULTI_SELECT_LIST:
         if (questionAnswers.getData().length < 1) {
           throw new AnswersValidationException(
               "Question type 'multiSelectList' expects one or more answer values");
         }
-        validateUuids(questionAnswers.getData());
+        validateUuids(extractUuids(questionAnswers.getData()));
+        break;
+      case CONDITIONAL_NUMERIC_INPUT:
+        // TODO
         break;
       case TEXT_INPUT:
         throw new NotImplementedException("TEXT_INPUT question type not implemented");
@@ -177,6 +196,10 @@ public class OutcomeService {
             format("Invalid UUID: %s, msg: %s", ans, ex.getMessage()));
       }
     }
+  }
+
+  private String[] extractUuids(final GivenAnswer[] givenAnswers) {
+    return Arrays.stream(givenAnswers).map(GivenAnswer::getUuid).toArray(String[]::new);
   }
 
 }

@@ -45,4 +45,15 @@ public interface OutcomeRepository extends Neo4jRepository<QuestionInstanceOutco
   @Depth(2)
   List<QuestionInstanceOutcome> findByUuid(String uuid);
 
+  @Query("MATCH (q:QuestionInstance {uuid: $currentQstnUuid})-[:HAS_ANSWER_GROUP]->(ag:AnswerGroup)-[ha:HAS_OUTCOME]->(outcome) "
+      + "WHERE (ag)-[:HAS_ANSWER]->(:Answer {uuid: $answerUuid}) "
+      + "AND ha.lowerBoundInclusive <= $answerValue AND ha.upperBoundExclusive > $answerValue "
+      + "OPTIONAL MATCH (outcome)-[r:DEFINED_BY]->(qd:QuestionDefinition) "
+      + "OPTIONAL MATCH (outcome)-[rnag:HAS_ANSWER_GROUP]->(nag:AnswerGroup) "
+      + "OPTIONAL MATCH (nag)-[na:HAS_ANSWER]->(a:Answer)  "
+      + "RETURN outcome, r, qd, rnag, nag, na, a")
+  List<QuestionInstanceOutcome> findSingleStaticConditionalNumericAnswerOutcome(
+      @Param("currentQstnUuid") String currentQstnUuid, @Param("answerUuid") String answerUuid,
+      @Param("answerValue") Double answerValue);
+
 }
