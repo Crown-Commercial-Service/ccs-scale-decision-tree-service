@@ -97,8 +97,6 @@ public class OutcomeService {
             "Multi select processing: Primary groups identical across given answer groups: {}",
             chosenMultiSelect);
       } else {
-        // Case 2: Primary group mixed across given answer groups' multi-selects. Choose
-        // highest precedence
         chosenMultiSelect = givenAnswersMultiSelects.stream()
             .sorted(Comparator.comparing(MultiSelect::getMixPrecedence)).findFirst();
         log.debug(
@@ -133,6 +131,14 @@ public class OutcomeService {
     throw new OutcomeException(currentQstnUuid, givenAnswers);
   }
 
+  /**
+   * Calculate the relevant {@link MultiSelect}s by intersecting the set of given answer UUIDs with
+   * those related to all answer groups for the current question instance
+   *
+   * @param answerGroups
+   * @param givenAnswers
+   * @return a collection of multi-select routings for the given answer set
+   */
   private Set<MultiSelect> filterMultiSelectByGivenAnwsers(final Set<AnswerGroup> answerGroups,
       final GivenAnswer[] givenAnswers) {
 

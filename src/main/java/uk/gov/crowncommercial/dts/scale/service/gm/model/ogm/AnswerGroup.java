@@ -32,10 +32,4 @@ public class AnswerGroup {
   @Relationship(type = "HAS_OUTCOME", direction = Relationship.OUTGOING)
   Set<HasOutcome> hasOutcomeRels;
 
-  // @Relationship(type = "HAS_OUTCOME", direction = Relationship.OUTGOING)
-  // Set<QuestionInstanceOutcome> questionInstanceOutcomes;
-
-  // @Relationship(type = "HAS_MULTI_SELECT", direction = Relationship.OUTGOING)
-  // Set<HasMultiSelect> hasMultiSelectRels;
-
 }
