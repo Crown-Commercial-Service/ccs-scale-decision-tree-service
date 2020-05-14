@@ -2,6 +2,7 @@ package uk.gov.crowncommercial.dts.scale.service.gm.service;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static uk.gov.crowncommercial.dts.scale.service.gm.model.QuestionType.BOOLEAN;
@@ -9,7 +10,6 @@ import static uk.gov.crowncommercial.dts.scale.service.gm.model.QuestionType.CON
 import static uk.gov.crowncommercial.dts.scale.service.gm.model.QuestionType.LIST;
 import static uk.gov.crowncommercial.dts.scale.service.gm.model.QuestionType.MULTI_SELECT_LIST;
 import java.util.*;
-import java.util.stream.Collectors;
 import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
@@ -52,6 +52,8 @@ public class OutcomeService {
         questionInstanceRepository.findByUuid(currentQstnUuid)
             .orElseThrow(() -> new RuntimeException("TODO: QuestionInstance not found etc"));
 
+    log.trace("currentQuestionInstance: {}", currentQuestionInstance);
+
     GivenAnswer[] givenAnswers = questionAnswers.getData();
 
     // Validate the incoming answers against the current question type:
@@ -74,6 +76,7 @@ public class OutcomeService {
 
       if (outcomes.isEmpty()) {
         Answer answer = lookupService.getAnswer(givenAnswers[0].getUuid());
+        log.debug("Answer retrieved from lookup service: {}", answer);
         outcomes = outcomeRepo.findByUuid(answer.getOutcomeUuid());
         log.debug("Single answer outcome retrieval from graph lookup service answers: {}",
             outcomes);
@@ -84,15 +87,23 @@ public class OutcomeService {
           filterMultiSelectByGivenAnwsers(currentQuestionInstance.getAnswerGroups(), givenAnswers);
       Optional<MultiSelect> chosenMultiSelect;
 
-      if (givenAnswersMultiSelects.stream().filter(MultiSelect::isPrimary)
-          // Case 1: Primary group the same across given answer groups' multi-selects
-          .map(MultiSelect::getGroup).collect(Collectors.toSet()).size() == 1) {
-        chosenMultiSelect = givenAnswersMultiSelects.stream().findFirst();
+      Set<MultiSelect> primaryMultiSelects =
+          givenAnswersMultiSelects.stream().filter(MultiSelect::isPrimary).collect(toSet());
+
+      if (primaryMultiSelects.stream().map(MultiSelect::getGroup).collect(toSet()).size() == 1) {
+
+        chosenMultiSelect = primaryMultiSelects.stream().findFirst();
+        log.debug(
+            "Multi select processing: Primary groups identical across given answer groups: {}",
+            chosenMultiSelect);
       } else {
         // Case 2: Primary group mixed across given answer groups' multi-selects. Choose
         // highest precedence
         chosenMultiSelect = givenAnswersMultiSelects.stream()
             .sorted(Comparator.comparing(MultiSelect::getMixPrecedence)).findFirst();
+        log.debug(
+            "Multi select processing: Primary groups mixed across given answer groups. Selected highest precedence: {}",
+            chosenMultiSelect);
       }
 
       outcomes = outcomeRepo.findMultiAnswerOutcomes(currentQstnUuid, chosenMultiSelect
@@ -126,13 +137,13 @@ public class OutcomeService {
       final GivenAnswer[] givenAnswers) {
 
     return answerGroups.stream().filter(ag -> {
-      Set<String> agAnswerUuids =
-          ag.getAnswers().stream().map(Answer::getUuid).collect(Collectors.toSet());
+      Set<String> agAnswerUuids = ag.getHasAnswerRels().stream().map(HasAnswer::getAnswer)
+          .map(Answer::getUuid).collect(toSet());
       Set<String> givenAnswerUuids =
-          Arrays.stream(givenAnswers).map(GivenAnswer::getUuid).collect(Collectors.toSet());
+          Arrays.stream(givenAnswers).map(GivenAnswer::getUuid).collect(toSet());
 
       return !Collections.disjoint(agAnswerUuids, givenAnswerUuids);
-    }).flatMap(ag -> ag.getMultiSelects().stream()).collect(Collectors.toSet());
+    }).flatMap(ag -> ag.getMultiSelects().stream()).collect(toSet());
   }
 
   private Outcome resolveOutcome(final List<QuestionInstanceOutcome> questionInstanceOutcomes) {
