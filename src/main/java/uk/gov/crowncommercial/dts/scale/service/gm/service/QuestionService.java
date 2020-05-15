@@ -47,7 +47,10 @@ public class QuestionService {
 
       if (hasAnswerRels.isPresent()) {
         return hasAnswerRels.get().stream().map(har -> {
+
+          // Set transient field values to augment Answer definition
           har.getAnswer().setOrder(har.getOrder());
+          har.getAnswer().setMutex(har.isMutex());
           return har.getAnswer();
         }).collect(Collectors.toSet()).stream();
       }
@@ -58,7 +61,7 @@ public class QuestionService {
             && StringUtils.isNotBlank(a.getConditionalInputText())
                 ? new ConditionalInput(a.getConditionalInputText(), a.getConditionalInputHint())
                 : null)
-        .build()).sorted(Comparator.comparingInt(DefinedAnswer::getOrder))
+        .mutex(a.isMutex()).build()).sorted(Comparator.comparingInt(DefinedAnswer::getOrder))
         .collect(Collectors.toList());
 
     return Question.builder().uuid(questionInstance.getUuid()).text(qd.getText()).type(qd.getType())

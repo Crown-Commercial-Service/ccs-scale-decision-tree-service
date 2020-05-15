@@ -15,5 +15,5 @@ public class DefinedAnswer {
   String hint;
   int order;
   ConditionalInput conditionalInput;
-
+  boolean mutex;
 }
