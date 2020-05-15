@@ -12,7 +12,7 @@ import uk.gov.crowncommercial.dts.scale.service.gm.model.ogm.QuestionInstance;
 @Repository
 public interface QuestionInstanceRepositoryNeo4J extends Neo4jRepository<QuestionInstance, Long> {
 
-  @Depth(2)
+  @Depth(3)
   Optional<QuestionInstance> findByUuid(String uuid);
 
 }
