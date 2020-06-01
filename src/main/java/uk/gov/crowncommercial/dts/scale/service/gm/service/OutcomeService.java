@@ -2,11 +2,15 @@ package uk.gov.crowncommercial.dts.scale.service.gm.service;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toSet;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static uk.gov.crowncommercial.dts.scale.service.gm.model.QuestionType.BOOLEAN;
+import static uk.gov.crowncommercial.dts.scale.service.gm.model.QuestionType.CONDITIONAL_NUMERIC_INPUT;
 import static uk.gov.crowncommercial.dts.scale.service.gm.model.QuestionType.LIST;
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
+import static uk.gov.crowncommercial.dts.scale.service.gm.model.QuestionType.MULTI_SELECT_LIST;
+import java.util.*;
+import java.util.stream.Collectors;
 import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
@@ -14,10 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import uk.gov.crowncommercial.dts.scale.service.gm.exception.AnswersValidationException;
 import uk.gov.crowncommercial.dts.scale.service.gm.exception.OutcomeException;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.*;
-import uk.gov.crowncommercial.dts.scale.service.gm.model.ogm.Answer;
-import uk.gov.crowncommercial.dts.scale.service.gm.model.ogm.Lot;
-import uk.gov.crowncommercial.dts.scale.service.gm.model.ogm.QuestionInstance;
-import uk.gov.crowncommercial.dts.scale.service.gm.model.ogm.QuestionInstanceOutcome;
+import uk.gov.crowncommercial.dts.scale.service.gm.model.ogm.*;
 import uk.gov.crowncommercial.dts.scale.service.gm.repository.OutcomeRepository;
 import uk.gov.crowncommercial.dts.scale.service.gm.repository.QuestionInstanceRepositoryNeo4J;
 
@@ -40,64 +41,118 @@ public class OutcomeService {
    * graph model itself, and secondly from the dynamic lookup source. The result is then wrapped in
    * a new {@link Outcome} object and returned, or an exception thrown.
    *
-   * @param currentQstnUuid the current, primary question instance UUID
-   * @param answeredQuestions an array of answered questions
+   * @param currentQstnUuid
+   * @param answerUuid
    * @return an Outcome instance containing either a question instance or an agreement
    * @throws OutcomeException if no outcome is discovered
    */
   public Outcome getQuestionInstanceOutcome(final String currentQstnUuid,
-      final AnsweredQuestion[] answeredQuestions) {
+      final AnsweredQuestion answeredQuestion) {
 
     QuestionInstance currentQuestionInstance =
         questionInstanceRepository.findByUuid(currentQstnUuid)
             .orElseThrow(() -> new RuntimeException("TODO: QuestionInstance not found etc"));
 
-    // TODO: In the future must handle multi-questions per 'page'
-    AnsweredQuestion firstAnsweredQuestion = answeredQuestions[0];
+    log.trace("currentQuestionInstance: {}", currentQuestionInstance);
+
+    Set<GivenAnswer> givenAnswers = answeredQuestion.getAnswers();
+    Optional<GivenAnswer> firstGivenAnswer = givenAnswers.stream().findFirst();
 
     // Validate the incoming answers against the current question type:
-    validateQuestionAnswers(currentQuestionInstance, firstAnsweredQuestion);
+    validateAnsweredQuestion(currentQuestionInstance, answeredQuestion);
 
     QuestionType questionType = currentQuestionInstance.getQuestion().getType();
-    List<QuestionInstanceOutcome> optOutcome;
+    List<QuestionInstanceOutcome> outcomes;
 
-    // Treat MULTI_SELECT questions as if they are LIST/BOOLEAN when only single answer selected:
+    /*
+     * Treat MULTI_SELECT questions as if they are LIST/BOOLEAN when only single answer selected.
+     * Likewise CONDITIONAL_NUMERIC_INPUT when no value given
+     */
     if (asList(BOOLEAN, LIST).contains(questionType)
-        || (questionType.equals(QuestionType.MULTI_SELECT_LIST)
-            && firstAnsweredQuestion.getAnswers().size() == 1)) {
+        || (questionType.equals(MULTI_SELECT_LIST) && givenAnswers.size() == 1)
+        || (questionType.equals(CONDITIONAL_NUMERIC_INPUT) && givenAnswers.size() == 1
+            && isBlank(firstGivenAnswer.get().getValue()))) {
 
-      final String firstAnswer = firstAnsweredQuestion.getAnswers().stream().findFirst()
-          .orElseThrow(() -> new RuntimeException("new"));
+      outcomes =
+          outcomeRepo.findSingleAnswerOutcomes(currentQstnUuid, firstGivenAnswer.get().getUuid());
+      log.debug("Single answer outcome retrieval from graph via static answers: {}", outcomes);
 
-      optOutcome = outcomeRepo.findSingleStaticAnswerOutcome(currentQstnUuid, firstAnswer);
-      log.debug("Single answer outcome retrieval from graph via static answers: {}", optOutcome);
-
-      if (optOutcome.isEmpty()) {
-        Answer answer = lookupService.getAnswer(firstAnswer);
-        optOutcome = outcomeRepo.findByUuid(answer.getOutcomeUuid());
+      if (outcomes.isEmpty()) {
+        Answer answer = lookupService.getAnswer(firstGivenAnswer.get().getUuid());
+        log.debug("Answer retrieved from lookup service: {}", answer);
+        outcomes = outcomeRepo.findByUuid(answer.getOutcomeUuid());
         log.debug("Single answer outcome retrieval from graph lookup service answers: {}",
-            optOutcome);
+            outcomes);
       }
-    } else if (questionType.equals(QuestionType.MULTI_SELECT_LIST)) {
+    } else if (questionType.equals(MULTI_SELECT_LIST)) {
 
-      optOutcome = outcomeRepo.findMultiStaticAnswerOutcome(currentQstnUuid,
-          firstAnsweredQuestion.getAnswers());
-      log.debug("Multi answer outcome retrieval from graph via static answers: {}", optOutcome);
+      Set<MultiSelect> givenAnswersMultiSelects =
+          filterMultiSelectByGivenAnwsers(currentQuestionInstance.getAnswerGroups(), givenAnswers);
+      Optional<MultiSelect> chosenMultiSelect;
 
-      if (optOutcome.isEmpty()) {
-        optOutcome = outcomeRepo.findMultiDynamicAnswerOutcome(currentQstnUuid);
-        log.debug("Multi answer outcome retrieval from graph (dynamic answers): {}", optOutcome);
+      Set<MultiSelect> primaryMultiSelects =
+          givenAnswersMultiSelects.stream().filter(MultiSelect::isPrimary).collect(toSet());
+
+      if (primaryMultiSelects.stream().map(MultiSelect::getGroup).collect(toSet()).size() == 1) {
+
+        chosenMultiSelect = primaryMultiSelects.stream().findFirst();
+        log.debug(
+            "Multi select processing: Primary groups identical across given answer groups: {}",
+            chosenMultiSelect);
+      } else {
+        chosenMultiSelect = givenAnswersMultiSelects.stream()
+            .sorted(Comparator.comparing(MultiSelect::getMixPrecedence)).findFirst();
+        log.debug(
+            "Multi select processing: Primary groups mixed across given answer groups. Selected highest precedence: {}",
+            chosenMultiSelect);
       }
+
+      outcomes = outcomeRepo.findMultiAnswerOutcomes(currentQstnUuid, chosenMultiSelect
+          .orElseThrow(() -> new IllegalStateException("Chosen MultiSelect not found")).getUuid());
+      log.debug("Multi answer outcome retrieval from graph via static answers: {}", outcomes);
+
+      if (outcomes.isEmpty()) {
+        outcomes = outcomeRepo.findMultiDynamicAnswerOutcomes(currentQstnUuid);
+        log.debug("Multi answer outcome retrieval from graph (dynamic answers): {}", outcomes);
+      }
+
+    } else if (questionType.equals(CONDITIONAL_NUMERIC_INPUT) && givenAnswers.size() == 1
+        && isNotBlank(firstGivenAnswer.get().getValue())) {
+
+      outcomes = outcomeRepo.findSingleConditionalNumericAnswerOutcomes(currentQstnUuid,
+          firstGivenAnswer.get().getUuid(), Double.parseDouble(firstGivenAnswer.get().getValue()));
+      log.debug("Single conditional numeric input answer retrieval from graph: {}", outcomes);
     } else {
       throw new AnswersValidationException("Question / answer type not currently supported");
     }
 
-    if (!optOutcome.isEmpty()) {
-      return resolveOutcome(optOutcome);
+    if (!outcomes.isEmpty()) {
+      return resolveOutcome(outcomes);
     }
 
     // Graph is malformed or lookup service does not contain outcome
-    throw new OutcomeException(currentQstnUuid, firstAnsweredQuestion.getAnswers());
+    throw new OutcomeException(currentQstnUuid, givenAnswers);
+  }
+
+  /**
+   * Calculate the relevant {@link MultiSelect}s by intersecting the set of given answer UUIDs with
+   * those related to all answer groups for the current question instance
+   *
+   * @param answerGroups
+   * @param givenAnswers
+   * @return a collection of multi-select routings for the given answer set
+   */
+  private Set<MultiSelect> filterMultiSelectByGivenAnwsers(final Set<AnswerGroup> answerGroups,
+      final Set<GivenAnswer> givenAnswers) {
+
+    return answerGroups.stream().filter(ag -> {
+      Set<String> agAnswerUuids = ag.getHasAnswerRels().stream().map(HasAnswer::getAnswer)
+          .map(Answer::getUuid).collect(toSet());
+      Set<String> givenAnswerUuids =
+          givenAnswers.stream().map(GivenAnswer::getUuid).collect(toSet());
+
+      return !Collections.disjoint(agAnswerUuids, givenAnswerUuids);
+    }).flatMap(ag -> ag.getMultiSelects().stream()).collect(toSet());
   }
 
   private Outcome resolveOutcome(final List<QuestionInstanceOutcome> questionInstanceOutcomes) {
@@ -128,33 +183,37 @@ public class OutcomeService {
     return true;
   }
 
-  private void validateQuestionAnswers(final QuestionInstance currentQuestionInstance,
+  private void validateAnsweredQuestion(final QuestionInstance currentQuestionInstance,
       final AnsweredQuestion answeredQuestion) {
 
     log.debug("Validating answers: {} for question instance: {}", answeredQuestion.getAnswers(),
         currentQuestionInstance.getUuid());
+    int numAnswers = answeredQuestion.getAnswers().size();
 
     switch (currentQuestionInstance.getQuestion().getType()) {
 
       case BOOLEAN:
-        if (answeredQuestion.getAnswers().size() != 1) {
+        if (numAnswers != 1) {
           throw new AnswersValidationException(
               "Question type 'boolean' expects single answer value");
         }
-        validateUuids(answeredQuestion.getAnswers());
+        validateUuids(extractUuids(answeredQuestion.getAnswers()));
         break;
       case LIST:
-        if (answeredQuestion.getAnswers().size() != 1) {
+        if (numAnswers != 1) {
           throw new AnswersValidationException("Question type 'list' expects single answer value");
         }
-        validateUuids(answeredQuestion.getAnswers());
+        validateUuids(extractUuids(answeredQuestion.getAnswers()));
         break;
       case MULTI_SELECT_LIST:
-        if (answeredQuestion.getAnswers().isEmpty()) {
+        if (numAnswers < 1) {
           throw new AnswersValidationException(
               "Question type 'multiSelectList' expects one or more answer values");
         }
-        validateUuids(answeredQuestion.getAnswers());
+        validateUuids(extractUuids(answeredQuestion.getAnswers()));
+        break;
+      case CONDITIONAL_NUMERIC_INPUT:
+        // TODO
         break;
       case TEXT_INPUT:
         throw new NotImplementedException("TEXT_INPUT question type not implemented");
@@ -173,7 +232,7 @@ public class OutcomeService {
     }
   }
 
-  private void validateUuids(final Collection<String> answerValues) {
+  private void validateUuids(final Set<String> answerValues) {
     for (String ans : answerValues) {
       try {
         UUID.fromString(ans);
@@ -182,6 +241,10 @@ public class OutcomeService {
             format("Invalid UUID: %s, msg: %s", ans, ex.getMessage()));
       }
     }
+  }
+
+  private Set<String> extractUuids(final Set<GivenAnswer> givenAnswers) {
+    return givenAnswers.stream().map(GivenAnswer::getUuid).collect(Collectors.toSet());
   }
 
 }

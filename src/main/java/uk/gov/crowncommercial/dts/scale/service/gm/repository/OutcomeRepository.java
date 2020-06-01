@@ -1,7 +1,6 @@
 package uk.gov.crowncommercial.dts.scale.service.gm.repository;
 
 import java.util.List;
-import java.util.Set;
 import org.springframework.data.neo4j.annotation.Depth;
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
@@ -21,30 +20,38 @@ public interface OutcomeRepository extends Neo4jRepository<QuestionInstanceOutco
       + "OPTIONAL MATCH (outcome)-[rnag:HAS_ANSWER_GROUP]->(nag:AnswerGroup) "
       + "OPTIONAL MATCH (nag)-[na:HAS_ANSWER]->(a:Answer)  "
       + "RETURN outcome, r, qd, rnag, nag, na, a")
-  List<QuestionInstanceOutcome> findSingleStaticAnswerOutcome(
+  List<QuestionInstanceOutcome> findSingleAnswerOutcomes(
       @Param("currentQstnUuid") String currentQstnUuid, @Param("answerUuid") String answerUuid);
 
-  @Query("MATCH (a:Answer) WHERE a.uuid IN $answerUuids " + "WITH collect(a) as answers "
-      + "MATCH (q:QuestionInstance {uuid: $currentQstnUuid})-[:HAS_ANSWER_GROUP]->(ag1:AnswerGroup)-[:MULTI_SELECT]->(mso) "
-      + "WHERE all(a in answers WHERE (ag1)-[:HAS_ANSWER]->(a)) "
-      + "OPTIONAL MATCH (mso)-[:HAS_OUTCOME]->(outcome) "
+  @Query("MATCH (q:QuestionInstance {uuid: $currentQstnUuid})-[:HAS_ANSWER_GROUP]->(:AnswerGroup)-[:HAS_MULTI_SELECT]-(:MultiSelect {uuid: $multiSelectUuid})-[:HAS_OUTCOME]->(outcome) "
       + "OPTIONAL MATCH (outcome)-[r:DEFINED_BY]->(qd:Question) "
       + "OPTIONAL MATCH (outcome)-[rnag:HAS_ANSWER_GROUP]->(nag:AnswerGroup) "
-      + "OPTIONAL MATCH (nag)-[na:HAS_ANSWER]->(a:Answer) "
+      + "OPTIONAL MATCH (nag)-[na:HAS_ANSWER]->(a:Answer)  "
       + "RETURN outcome, r, qd, rnag, nag, na, a")
-  List<QuestionInstanceOutcome> findMultiStaticAnswerOutcome(
+  List<QuestionInstanceOutcome> findMultiAnswerOutcomes(
       @Param("currentQstnUuid") String currentQstnUuid,
-      @Param("answerUuids") Set<String> answerUuids);
+      @Param("multiSelectUuid") String multiSelectUuid);
 
-  @Query("MATCH (q:QuestionInstance {uuid: $currentQstnUuid})-[:HAS_ANSWER_GROUP]->(ag1:AnswerGroup)-[:MULTI_SELECT]->(outcome) "
+  @Query("MATCH (q:QuestionInstance {uuid: $currentQstnUuid})-[:HAS_ANSWER_GROUP]->(:AnswerGroup)-[:HAS_MULTI_SELECT]-(:MultiSelect)-[:HAS_OUTCOME]->(outcome) "
       + "OPTIONAL MATCH (outcome)-[r:DEFINED_BY]->(qd:Question) "
       + "OPTIONAL MATCH (outcome)-[rnag:HAS_ANSWER_GROUP]->(nag:AnswerGroup) "
       + "OPTIONAL MATCH (nag)-[na:HAS_ANSWER]->(a:Answer) "
       + "RETURN outcome, r, qd, rnag, nag, na, a")
-  List<QuestionInstanceOutcome> findMultiDynamicAnswerOutcome(
+  List<QuestionInstanceOutcome> findMultiDynamicAnswerOutcomes(
       @Param("currentQstnUuid") String currentQstnUuid);
 
   @Depth(2)
   List<QuestionInstanceOutcome> findByUuid(String uuid);
+
+  @Query("MATCH (q:QuestionInstance {uuid: $currentQstnUuid})-[:HAS_ANSWER_GROUP]->(ag:AnswerGroup)-[ha:HAS_OUTCOME]->(outcome) "
+      + "WHERE (ag)-[:HAS_ANSWER]->(:Answer {uuid: $answerUuid}) "
+      + "AND ha.lowerBoundInclusive <= $answerValue AND ha.upperBoundExclusive > $answerValue "
+      + "OPTIONAL MATCH (outcome)-[r:DEFINED_BY]->(qd:Question) "
+      + "OPTIONAL MATCH (outcome)-[rnag:HAS_ANSWER_GROUP]->(nag:AnswerGroup) "
+      + "OPTIONAL MATCH (nag)-[na:HAS_ANSWER]->(a:Answer)  "
+      + "RETURN outcome, r, qd, rnag, nag, na, a")
+  List<QuestionInstanceOutcome> findSingleConditionalNumericAnswerOutcomes(
+      @Param("currentQstnUuid") String currentQstnUuid, @Param("answerUuid") String answerUuid,
+      @Param("answerValue") Double answerValue);
 
 }

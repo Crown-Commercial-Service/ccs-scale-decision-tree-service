@@ -1,5 +1,6 @@
 package uk.gov.crowncommercial.dts.scale.service.gm.service;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -9,7 +10,9 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.AnswerDefinition;
+import uk.gov.crowncommercial.dts.scale.service.gm.model.ConditionalInput;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.QuestionDefinition;
+import uk.gov.crowncommercial.dts.scale.service.gm.model.QuestionType;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.ogm.HasAnswer;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.ogm.Question;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.ogm.QuestionInstance;
@@ -45,14 +48,25 @@ public class QuestionService {
 
           if (hasAnswerRels.isPresent()) {
             return hasAnswerRels.get().stream().map(har -> {
+
+              // Set transient field values to augment Answer definition
               har.getAnswer().setOrder(har.getOrder());
+              har.getAnswer().setMutex(har.isMutex());
               return har.getAnswer();
             }).collect(Collectors.toSet()).stream();
           }
           return lookupService.findAnswers(questionInstance.getUuid(), "TODO - modifier term")
               .stream();
+
         }).map(a -> AnswerDefinition.builder().uuid(a.getUuid()).text(a.getText()).hint(a.getHint())
-            .order(a.getOrder()).build())
+            .order(a.getOrder())
+            .conditionalInput(question.getType() == QuestionType.CONDITIONAL_NUMERIC_INPUT
+                && isNotBlank(a.getConditionalInputText())
+                    ? new ConditionalInput(a.getConditionalInputText(), a.getConditionalInputHint(),
+                        QuestionType.NUMBER)
+                    : null)
+            .mutuallyExclusive(a.isMutex()).build())
+
             .sorted(Comparator.comparingInt(AnswerDefinition::getOrder))
             .collect(Collectors.toList());
 
