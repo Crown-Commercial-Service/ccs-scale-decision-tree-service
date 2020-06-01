@@ -20,6 +20,7 @@ public class HasAnswer {
 
   Long id;
   Integer order;
+  Boolean mutex;
 
   @EqualsAndHashCode.Exclude
   @ToString.Exclude

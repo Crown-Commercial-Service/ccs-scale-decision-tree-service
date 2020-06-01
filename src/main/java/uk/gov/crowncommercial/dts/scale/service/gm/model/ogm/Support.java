@@ -1,17 +1,19 @@
 package uk.gov.crowncommercial.dts.scale.service.gm.model.ogm;
 
+import org.neo4j.ogm.annotation.NodeEntity;
+import lombok.AccessLevel;
+import lombok.Data;
+import lombok.experimental.FieldDefaults;
+
 /**
  *
  */
+@Data
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@NodeEntity
 public class Support implements QuestionInstanceOutcome {
 
-  /* (non-Javadoc)
-   * @see uk.gov.crowncommercial.dts.scale.service.gm.model.ogm.QuestionInstanceOutcome#getUuid()
-   */
-  @Override
-  public String getUuid() {
-    // TODO Auto-generated method stub
-    return null;
-  }
+  Long id;
+  String uuid;
 
 }

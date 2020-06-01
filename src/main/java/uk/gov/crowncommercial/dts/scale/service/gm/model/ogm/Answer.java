@@ -18,5 +18,5 @@ public class Answer {
   Integer order;
   String hint;
   String outcomeUuid;
-
+  QuestionInstance conditionalInputQuestion;
 }
