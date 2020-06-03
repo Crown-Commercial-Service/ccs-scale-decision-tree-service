@@ -21,7 +21,7 @@ public class Answer {
   String outcomeUuid;
 
   @Relationship(type = "HAS_CONDITIONAL_INPUT", direction = Relationship.OUTGOING)
-  QuestionInstance conditionalInputQuestion;
+  Question conditionalInputQuestion;
 
   @Transient
   Integer order;

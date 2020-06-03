@@ -18,18 +18,16 @@ public interface OutcomeRepository extends Neo4jRepository<QuestionInstanceOutco
       + "OPTIONAL MATCH (outcome:QuestionInstance)-[r:DEFINED_BY]->(qd:Question) "
       + "OPTIONAL MATCH (outcome:QuestionInstance)-[rnag:HAS_ANSWER_GROUP]->(nag:AnswerGroup) "
       + "OPTIONAL MATCH (outcome:Agreement)-[rlot:HAS_LOT]->(lot:Lot) "
-      + "OPTIONAL MATCH (nag)-[na:HAS_ANSWER]->(a:Answer) "
-      + "OPTIONAL MATCH (a)-[hci:HAS_CONDITIONAL_INPUT]->(ciqi:QuestionInstance)-[cidb:DEFINED_BY]->(ciq:Question) "
-      + "RETURN outcome, r, qd, rnag, nag, na, a, hci, ciqi, cidb, ciq, rlot, lot")
+      + "OPTIONAL MATCH (nag)-[na:HAS_ANSWER]->(a:Answer)-[hci:HAS_CONDITIONAL_INPUT]->(ciq:Question) "
+      + "RETURN outcome, r, qd, rnag, nag, na, a, hci, ciq, rlot, lot")
   List<QuestionInstanceOutcome> findSingleAnswerOutcomes(
       @Param("currentQstnUuid") String currentQstnUuid, @Param("answerUuid") String answerUuid);
 
   @Query("MATCH (q:QuestionInstance {uuid: $currentQstnUuid})-[:HAS_ANSWER_GROUP]->(:AnswerGroup)-[:HAS_MULTI_SELECT]-(:MultiSelect {uuid: $multiSelectUuid})-[:HAS_OUTCOME]->(outcome) "
       + "OPTIONAL MATCH (outcome)-[r:DEFINED_BY]->(qd:Question) "
       + "OPTIONAL MATCH (outcome)-[rnag:HAS_ANSWER_GROUP]->(nag:AnswerGroup) "
-      + "OPTIONAL MATCH (nag)-[na:HAS_ANSWER]->(a:Answer)  "
-      + "OPTIONAL MATCH (a)-[hci:HAS_CONDITIONAL_INPUT]->(ciqi:QuestionInstance)-[cidb:DEFINED_BY]->(ciq:Question) "
-      + "RETURN outcome, r, qd, rnag, nag, na, a, hci, ciqi, cidb, ciq")
+      + "OPTIONAL MATCH (nag)-[na:HAS_ANSWER]->(a:Answer)-[hci:HAS_CONDITIONAL_INPUT]->(ciq:Question)  "
+      + "RETURN outcome, r, qd, rnag, nag, na, a, hci, ciq")
   List<QuestionInstanceOutcome> findMultiAnswerOutcomes(
       @Param("currentQstnUuid") String currentQstnUuid,
       @Param("multiSelectUuid") String multiSelectUuid);

@@ -9,7 +9,7 @@ import lombok.Value;
 @Value
 public class AnsweredQuestion {
 
-  String id;
+  String uuid;
   Set<GivenAnswer> answers;
 
 }

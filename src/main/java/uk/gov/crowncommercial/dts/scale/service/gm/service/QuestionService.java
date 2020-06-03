@@ -76,7 +76,6 @@ public class QuestionService {
 
   private Optional<ConditionalInput> getConditionalInputFromAnswer(final Answer answer) {
     return Optional.ofNullable(answer.getConditionalInputQuestion())
-        .map(QuestionInstance::getQuestion)
         .map(q -> new ConditionalInput(q.getText(), q.getHint(), q.getType()));
   }
 }
