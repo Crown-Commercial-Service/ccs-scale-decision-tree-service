@@ -8,9 +8,8 @@ import org.apache.camel.model.rest.RestParamType;
 import org.springframework.stereotype.Component;
 import lombok.RequiredArgsConstructor;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.AnsweredQuestion;
+import uk.gov.crowncommercial.dts.scale.service.gm.model.JourneyStart;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.Outcome;
-import uk.gov.crowncommercial.dts.scale.service.gm.model.ogm.Journey;
-import uk.gov.crowncommercial.dts.scale.service.gm.model.ogm.QuestionInstance;
 import uk.gov.crowncommercial.dts.scale.service.gm.service.JourneyService;
 import uk.gov.crowncommercial.dts.scale.service.gm.service.OutcomeService;
 import uk.gov.crowncommercial.dts.scale.service.gm.service.QuestionService;
@@ -44,32 +43,17 @@ public class DecisionTreeRouteBuilder extends EndpointRouteBuilder {
       .bindingMode(JSON_BINDING);
 
     /*
-     * Search journeys
+     * Get Journey
      */
     rest()
-      .get(PATH_JOURNEYS)
-      .outType(Journey[].class)
-      .param().name("q").type(RestParamType.query).required(TRUE).endParam()
-      .to("direct:search-journeys");
+      .get(PATH_JOURNEYS + "/{journey-uuid}")
+      .outType(JourneyStart.class)
+      .param().name("journey-uuid").type(RestParamType.path).required(TRUE).endParam()
+      .to("direct:get-journey");
 
-    from("direct:search-journeys")
-      .log(LoggingLevel.INFO, "Journey search invoked")
-      .bean(journeyService, "searchJourneys(${headers[q]})")
-      .to(ROUTE_DIRECT_FINALISE_RESPONSE);
-
-    /*
-     * Get journey questionInstance
-     */
-    rest()
-      .get(PATH_JOURNEYS + "/{uuid}/questions/{question-uuid}")
-      .outType(QuestionInstance.class)
-      .param().name("uuid").type(RestParamType.path).required(TRUE).endParam()
-      .param().name("question-uuid").type(RestParamType.path).required(TRUE).endParam()
-      .to("direct:get-journey-questionInstance");
-
-    from("direct:get-journey-questionInstance")
-      .log(LoggingLevel.INFO, "Journey get questionInstance invoked")
-      .bean(questionService, "getQuestion(${headers[question-uuid]})")
+    from("direct:get-journey")
+      .log(LoggingLevel.INFO, "Get Journey invoked")
+      .bean(journeyService, "getJourney(${headers[journey-uuid]})")
       .to(ROUTE_DIRECT_FINALISE_RESPONSE);
 
     /*

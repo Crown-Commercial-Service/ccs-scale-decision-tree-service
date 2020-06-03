@@ -6,7 +6,6 @@ import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static uk.gov.crowncommercial.dts.scale.service.gm.model.QuestionType.BOOLEAN;
-import static uk.gov.crowncommercial.dts.scale.service.gm.model.QuestionType.CONDITIONAL_NUMERIC_INPUT;
 import static uk.gov.crowncommercial.dts.scale.service.gm.model.QuestionType.LIST;
 import static uk.gov.crowncommercial.dts.scale.service.gm.model.QuestionType.MULTI_SELECT_LIST;
 import java.util.*;
@@ -16,6 +15,7 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import uk.gov.crowncommercial.dts.scale.service.gm.exception.AnswersValidationException;
+import uk.gov.crowncommercial.dts.scale.service.gm.exception.GraphException;
 import uk.gov.crowncommercial.dts.scale.service.gm.exception.OutcomeException;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.*;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.ogm.*;
@@ -33,7 +33,7 @@ public class OutcomeService {
   private final OutcomeRepository outcomeRepo;
   private final QuestionInstanceRepositoryNeo4J questionInstanceRepository;
   private final QuestionService questionService;
-  private final LookupService lookupService;
+  // private final LookupService lookupService;
 
   /**
    * Attempt to find an 'outcome' (a {@link QuestionInstanceOutcome} instance which is either a
@@ -47,21 +47,23 @@ public class OutcomeService {
    * @throws OutcomeException if no outcome is discovered
    */
   public Outcome getQuestionInstanceOutcome(final String currentQstnUuid,
-      final AnsweredQuestion answeredQuestion) {
+      final AnsweredQuestion[] answeredQuestions) {
 
-    QuestionInstance currentQuestionInstance =
-        questionInstanceRepository.findByUuid(currentQstnUuid)
-            .orElseThrow(() -> new RuntimeException("TODO: QuestionInstance not found etc"));
+    QuestionInstance questionInstance = questionInstanceRepository.findByUuid(currentQstnUuid)
+        .orElseThrow(() -> new RuntimeException("TODO: QuestionInstance not found etc"));
 
-    log.trace("currentQuestionInstance: {}", currentQuestionInstance);
+    log.trace("currentQuestionInstance: {}", questionInstance);
 
-    Set<GivenAnswer> givenAnswers = answeredQuestion.getAnswers();
-    Optional<GivenAnswer> firstGivenAnswer = givenAnswers.stream().findFirst();
+    AnsweredQuestion firstAnsweredQuestion = answeredQuestions[0];
+    Set<GivenAnswer> givenAnswers = firstAnsweredQuestion.getAnswers();
+    GivenAnswer firstGivenAnswer =
+        givenAnswers.stream().findFirst().orElseThrow(() -> new RuntimeException(
+            "TODO: 400 Bad Request (client must submit at least one answer)"));
 
     // Validate the incoming answers against the current question type:
-    validateAnsweredQuestion(currentQuestionInstance, answeredQuestion);
+    validateAnsweredQuestion(questionInstance, firstAnsweredQuestion);
 
-    QuestionType questionType = currentQuestionInstance.getQuestion().getType();
+    QuestionType questionType = questionInstance.getQuestion().getType();
     List<QuestionInstanceOutcome> outcomes;
 
     /*
@@ -70,24 +72,23 @@ public class OutcomeService {
      */
     if (asList(BOOLEAN, LIST).contains(questionType)
         || (questionType.equals(MULTI_SELECT_LIST) && givenAnswers.size() == 1)
-        || (questionType.equals(CONDITIONAL_NUMERIC_INPUT) && givenAnswers.size() == 1
-            && isBlank(firstGivenAnswer.get().getValue()))) {
+        || (questionInstance.isConditionalInput() && givenAnswers.size() == 1
+            && isBlank(firstGivenAnswer.getValue()))) {
 
-      outcomes =
-          outcomeRepo.findSingleAnswerOutcomes(currentQstnUuid, firstGivenAnswer.get().getUuid());
+      outcomes = outcomeRepo.findSingleAnswerOutcomes(currentQstnUuid, firstGivenAnswer.getUuid());
       log.debug("Single answer outcome retrieval from graph via static answers: {}", outcomes);
 
-      if (outcomes.isEmpty()) {
-        Answer answer = lookupService.getAnswer(firstGivenAnswer.get().getUuid());
-        log.debug("Answer retrieved from lookup service: {}", answer);
-        outcomes = outcomeRepo.findByUuid(answer.getOutcomeUuid());
-        log.debug("Single answer outcome retrieval from graph lookup service answers: {}",
-            outcomes);
-      }
+      // if (outcomes.isEmpty()) {
+      // Answer answer = lookupService.getAnswer(firstGivenAnswer.getUuid());
+      // log.debug("Answer retrieved from lookup service: {}", answer);
+      // outcomes = outcomeRepo.findByUuid(answer.getOutcomeUuid());
+      // log.debug("Single answer outcome retrieval from graph lookup service answers: {}",
+      // outcomes);
+      // }
     } else if (questionType.equals(MULTI_SELECT_LIST)) {
 
       Set<MultiSelect> givenAnswersMultiSelects =
-          filterMultiSelectByGivenAnwsers(currentQuestionInstance.getAnswerGroups(), givenAnswers);
+          filterMultiSelectByGivenAnwsers(questionInstance.getAnswerGroups(), givenAnswers);
       Optional<MultiSelect> chosenMultiSelect;
 
       Set<MultiSelect> primaryMultiSelects =
@@ -111,16 +112,16 @@ public class OutcomeService {
           .orElseThrow(() -> new IllegalStateException("Chosen MultiSelect not found")).getUuid());
       log.debug("Multi answer outcome retrieval from graph via static answers: {}", outcomes);
 
-      if (outcomes.isEmpty()) {
-        outcomes = outcomeRepo.findMultiDynamicAnswerOutcomes(currentQstnUuid);
-        log.debug("Multi answer outcome retrieval from graph (dynamic answers): {}", outcomes);
-      }
+      // if (outcomes.isEmpty()) {
+      // outcomes = outcomeRepo.findMultiDynamicAnswerOutcomes(currentQstnUuid);
+      // log.debug("Multi answer outcome retrieval from graph (dynamic answers): {}", outcomes);
+      // }
 
-    } else if (questionType.equals(CONDITIONAL_NUMERIC_INPUT) && givenAnswers.size() == 1
-        && isNotBlank(firstGivenAnswer.get().getValue())) {
+    } else if (questionInstance.isConditionalInput() && givenAnswers.size() == 1
+        && isNotBlank(firstGivenAnswer.getValue())) {
 
       outcomes = outcomeRepo.findSingleConditionalNumericAnswerOutcomes(currentQstnUuid,
-          firstGivenAnswer.get().getUuid(), Double.parseDouble(firstGivenAnswer.get().getValue()));
+          firstGivenAnswer.getUuid(), Double.parseDouble(firstGivenAnswer.getValue()));
       log.debug("Single conditional numeric input answer retrieval from graph: {}", outcomes);
     } else {
       throw new AnswersValidationException("Question / answer type not currently supported");
@@ -165,32 +166,32 @@ public class OutcomeService {
       return new Outcome(OutcomeType.QUESTION,
           questionService.convertToQuestion(questionInstanceRepository
               .findById(((QuestionInstance) questionInstanceOutcomes.get(0)).getId(), 2).get()));
-    } else if (allLots(questionInstanceOutcomes)) {
-      return new Outcome(OutcomeType.LOT, LotList.fromItems(questionInstanceOutcomes));
+    } else if (allAgreements(questionInstanceOutcomes)) {
+      return new Outcome(OutcomeType.AGREEMENT, AgreementList.fromItems(questionInstanceOutcomes));
     } else {
-      throw new IllegalStateException(
+      throw new GraphException(
           "Found either multiple QuestionInstance outcomes or mixture of Lot/other outcome"
               + questionInstanceOutcomes);
     }
   }
 
-  private boolean allLots(final List<QuestionInstanceOutcome> questionInstanceOutcomes) {
+  private boolean allAgreements(final List<QuestionInstanceOutcome> questionInstanceOutcomes) {
     for (QuestionInstanceOutcome qic : questionInstanceOutcomes) {
-      if (!(qic instanceof Lot)) {
+      if (!(qic instanceof Agreement)) {
         return false;
       }
     }
     return true;
   }
 
-  private void validateAnsweredQuestion(final QuestionInstance currentQuestionInstance,
+  private void validateAnsweredQuestion(final QuestionInstance questionInstance,
       final AnsweredQuestion answeredQuestion) {
 
     log.debug("Validating answers: {} for question instance: {}", answeredQuestion.getAnswers(),
-        currentQuestionInstance.getUuid());
+        questionInstance.getUuid());
     int numAnswers = answeredQuestion.getAnswers().size();
 
-    switch (currentQuestionInstance.getQuestion().getType()) {
+    switch (questionInstance.getQuestion().getType()) {
 
       case BOOLEAN:
         if (numAnswers != 1) {
@@ -211,9 +212,6 @@ public class OutcomeService {
               "Question type 'multiSelectList' expects one or more answer values");
         }
         validateUuids(extractUuids(answeredQuestion.getAnswers()));
-        break;
-      case CONDITIONAL_NUMERIC_INPUT:
-        // TODO
         break;
       case TEXT_INPUT:
         throw new NotImplementedException("TEXT_INPUT question type not implemented");

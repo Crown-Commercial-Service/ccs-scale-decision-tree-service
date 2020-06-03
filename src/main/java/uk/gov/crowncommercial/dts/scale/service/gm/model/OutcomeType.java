@@ -1,15 +1,18 @@
 package uk.gov.crowncommercial.dts.scale.service.gm.model;
 
-import com.fasterxml.jackson.annotation.JsonValue;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * Enumerated outcome types
  */
 public enum OutcomeType {
-  QUESTION, LOT, SUPPORT;
 
-  @JsonValue
-  public String getName() {
-    return this.name().toLowerCase();
-  }
+  @JsonProperty("question")
+  QUESTION,
+
+  @JsonProperty("agreement")
+  AGREEMENT,
+
+  @JsonProperty("support")
+  SUPPORT;
 }

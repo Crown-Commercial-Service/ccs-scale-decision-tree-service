@@ -34,7 +34,4 @@ public enum QuestionType {
 
   @JsonProperty("nuts")
   NUTS,
-
-  @JsonProperty("conditionalNumericInput")
-  CONDITIONAL_NUMERIC_INPUT;
 }

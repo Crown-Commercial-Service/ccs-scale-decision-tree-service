@@ -1,6 +1,5 @@
 package uk.gov.crowncommercial.dts.scale.service.gm.service;
 
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -9,10 +8,11 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import uk.gov.crowncommercial.dts.scale.service.gm.exception.GraphException;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.AnswerDefinition;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.ConditionalInput;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.QuestionDefinition;
-import uk.gov.crowncommercial.dts.scale.service.gm.model.QuestionType;
+import uk.gov.crowncommercial.dts.scale.service.gm.model.ogm.Answer;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.ogm.HasAnswer;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.ogm.Question;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.ogm.QuestionInstance;
@@ -27,7 +27,7 @@ import uk.gov.crowncommercial.dts.scale.service.gm.repository.QuestionInstanceRe
 public class QuestionService {
 
   private final QuestionInstanceRepositoryNeo4J questionRepository;
-  private final LookupService lookupService;
+  // private final LookupService lookupService;
 
   public QuestionDefinition getQuestion(final String uuid) {
     Optional<QuestionInstance> questionInstance = questionRepository.findByUuid(uuid);
@@ -55,18 +55,17 @@ public class QuestionService {
               return har.getAnswer();
             }).collect(Collectors.toSet()).stream();
           }
-          return lookupService.findAnswers(questionInstance.getUuid(), "TODO - modifier term")
-              .stream();
+          throw new GraphException("TODO: No answer relations found");
 
-        }).map(a -> AnswerDefinition.builder().uuid(a.getUuid()).text(a.getText()).hint(a.getHint())
-            .order(a.getOrder())
-            .conditionalInput(question.getType() == QuestionType.CONDITIONAL_NUMERIC_INPUT
-                && isNotBlank(a.getConditionalInputText())
-                    ? new ConditionalInput(a.getConditionalInputText(), a.getConditionalInputHint(),
-                        QuestionType.NUMBER)
-                    : null)
-            .mutuallyExclusive(a.isMutex()).build())
+          // return lookupService.findAnswers(questionInstance.getUuid(), "TODO - modifier term")
+          // .stream();
 
+        })
+            // Map each Answer to an AnswerDefinition
+            .map(a -> AnswerDefinition.builder().uuid(a.getUuid()).text(a.getText())
+                .hint(a.getHint()).order(a.getOrder())
+                .conditionalInput(getConditionalInputFromAnswer(a).orElseGet(() -> null))
+                .mutuallyExclusive(a.isMutex()).build())
             .sorted(Comparator.comparingInt(AnswerDefinition::getOrder))
             .collect(Collectors.toList());
 
@@ -75,4 +74,9 @@ public class QuestionService {
         .answerDefinitions(answerDefinitions).build();
   }
 
+  private Optional<ConditionalInput> getConditionalInputFromAnswer(final Answer answer) {
+    return Optional.ofNullable(answer.getConditionalInputQuestion())
+        .map(QuestionInstance::getQuestion)
+        .map(q -> new ConditionalInput(q.getText(), q.getHint(), q.getType()));
+  }
 }

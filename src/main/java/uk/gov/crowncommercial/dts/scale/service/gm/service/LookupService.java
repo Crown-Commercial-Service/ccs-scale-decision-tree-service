@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import lombok.extern.slf4j.Slf4j;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.ogm.Answer;
@@ -15,7 +14,7 @@ import uk.gov.crowncommercial.dts.scale.service.gm.model.ogm.Answer;
 /**
  *
  */
-@Service
+// @Service
 @Slf4j
 public class LookupService {
 

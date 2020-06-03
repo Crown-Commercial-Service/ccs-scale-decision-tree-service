@@ -4,7 +4,6 @@ import org.neo4j.ogm.annotation.NodeEntity;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
-import uk.gov.crowncommercial.dts.scale.service.gm.model.JourneyResultType;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.RouteToMarket;
 
 /**
@@ -13,17 +12,20 @@ import uk.gov.crowncommercial.dts.scale.service.gm.model.RouteToMarket;
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @NodeEntity
-public class Lot implements QuestionInstanceOutcome {
+public class Lot {
 
-  String uuid;
-  String agreementName;
-  String lotName;
-  String agreementDescription;
-  String lotDescription;
-  String agreementId;
-  String url;
-  JourneyResultType type;
+  String number;
+
+  /**
+   * Primary RTM - {@link RouteToMarket#BAT} or {@link RouteToMarket#CAT}
+   */
+  RouteToMarket type;
+
+  /**
+   * Secondary RTM - {@link RouteToMarket#DA} or {@link RouteToMarket#FC}
+   */
   RouteToMarket routeToMarket;
+  String url;
   boolean scale;
 
 }
