@@ -32,9 +32,9 @@ public class OutcomeService {
 
   /**
    * Attempt to find an 'outcome' (a {@link QuestionInstanceOutcome} instance which is either a
-   * {@link QuestionInstance} or an {@link Lot}) from firstly, the static answers defined in the
-   * graph model itself, and secondly from the dynamic lookup source. The result is then wrapped in
-   * a new {@link Outcome} object and returned, or an exception thrown.
+   * {@link QuestionInstance} or a collection of {@link Agreement}) from answer group based routing
+   * defined in the graph. The result is then wrapped in a new {@link Outcome} object and returned,
+   * or an exception thrown.
    *
    * @param currentQstnUuid
    * @param answerUuid
