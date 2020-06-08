@@ -12,7 +12,7 @@ import uk.gov.crowncommercial.dts.scale.service.gm.model.ogm.QuestionInstance;
  */
 @Value
 @Builder
-public class QuestionDefinition implements OutcomeData {
+public class QuestionDefinition {
 
   String uuid;
   String text;

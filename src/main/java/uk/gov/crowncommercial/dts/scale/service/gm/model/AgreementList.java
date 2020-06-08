@@ -7,7 +7,7 @@ import uk.gov.crowncommercial.dts.scale.service.gm.model.ogm.Agreement;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.ogm.QuestionInstanceOutcome;
 
 /**
- * Lot collection wrapper
+ * Agreement collection wrapper
  */
 public class AgreementList extends ArrayList<Agreement> implements OutcomeData {
 

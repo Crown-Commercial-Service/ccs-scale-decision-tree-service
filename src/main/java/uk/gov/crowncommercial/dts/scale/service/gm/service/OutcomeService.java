@@ -45,6 +45,10 @@ public class OutcomeService {
       final AnsweredQuestion[] answeredQuestions) {
 
     AnsweredQuestion firstAnsweredQuestion = answeredQuestions[0];
+
+    log.debug("currentQstnUuid: {}, firstAnsweredQuestion: {}", currentQstnUuid,
+        firstAnsweredQuestion);
+
     if (!firstAnsweredQuestion.getUuid().equals(currentQstnUuid)) {
       throw new IllegalStateException(
           "First answered question UUID does not match path param question UUID");
@@ -147,14 +151,16 @@ public class OutcomeService {
 
       // TODO: Investigate why, when cast to a QuestionInstance the entity is not fully hydrated.
       // Refactor accordingly (should not be necessary to load same object from graph
-      return new Outcome(OutcomeType.QUESTION,
-          questionService.convertToQuestion(questionInstanceRepository
-              .findById(((QuestionInstance) questionInstanceOutcomes.get(0)).getId(), 3).get()));
+      return new Outcome(OutcomeType.QUESTION, QuestionDefinitionList
+          .fromItems(questionService.convertToQuestion(questionInstanceRepository
+              .findById(((QuestionInstance) questionInstanceOutcomes.get(0)).getId(), 3).get())));
     } else if (allAgreements(questionInstanceOutcomes)) {
       return new Outcome(OutcomeType.AGREEMENT, AgreementList.fromItems(questionInstanceOutcomes));
+    } else if (questionInstanceOutcomes.get(0) instanceof Support) {
+      return new Outcome(OutcomeType.SUPPORT, null);
     } else {
       throw new GraphException(
-          "Found either multiple QuestionInstance outcomes or mixture of Lot/other outcome"
+          "Found neither a single QuestionInstance outcome nor multiple Agreements nor the Support type: "
               + questionInstanceOutcomes);
     }
   }
