@@ -27,7 +27,6 @@ import uk.gov.crowncommercial.dts.scale.service.gm.repository.QuestionInstanceRe
 public class QuestionService {
 
   private final QuestionInstanceRepositoryNeo4J questionRepository;
-  // private final LookupService lookupService;
 
   public QuestionDefinition getQuestion(final String uuid) {
     Optional<QuestionInstance> questionInstance = questionRepository.findByUuid(uuid);
@@ -56,10 +55,6 @@ public class QuestionService {
             }).collect(Collectors.toSet()).stream();
           }
           throw new GraphException("TODO: No answer relations found");
-
-          // return lookupService.findAnswers(questionInstance.getUuid(), "TODO - modifier term")
-          // .stream();
-
         })
             // Map each Answer to an AnswerDefinition
             .map(a -> AnswerDefinition.builder().uuid(a.getUuid()).text(a.getText())

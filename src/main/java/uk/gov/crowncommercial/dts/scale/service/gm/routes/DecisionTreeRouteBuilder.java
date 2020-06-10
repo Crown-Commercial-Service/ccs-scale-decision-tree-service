@@ -12,7 +12,6 @@ import uk.gov.crowncommercial.dts.scale.service.gm.model.JourneyStart;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.Outcome;
 import uk.gov.crowncommercial.dts.scale.service.gm.service.JourneyService;
 import uk.gov.crowncommercial.dts.scale.service.gm.service.OutcomeService;
-import uk.gov.crowncommercial.dts.scale.service.gm.service.QuestionService;
 
 /**
  * Camel routing configuration (WIP)
@@ -27,7 +26,6 @@ public class DecisionTreeRouteBuilder extends EndpointRouteBuilder {
   private static final String ROUTE_DIRECT_FINALISE_RESPONSE = "direct:finalise-response";
 
   private final JourneyService journeyService;
-  private final QuestionService questionService;
   private final OutcomeService outcomeService;
 
   /*

@@ -151,9 +151,11 @@ public class OutcomeService {
 
       // TODO: Investigate why, when cast to a QuestionInstance the entity is not fully hydrated.
       // Refactor accordingly (should not be necessary to load same object from graph
-      return new Outcome(OutcomeType.QUESTION, QuestionDefinitionList
-          .fromItems(questionService.convertToQuestion(questionInstanceRepository
-              .findById(((QuestionInstance) questionInstanceOutcomes.get(0)).getId(), 3).get())));
+      return new Outcome(OutcomeType.QUESTION,
+          QuestionDefinitionList
+              .fromItems(questionService.convertToQuestion(questionInstanceRepository
+                  .findById(((QuestionInstance) questionInstanceOutcomes.get(0)).getId(), 3)
+                  .orElseThrow(() -> new GraphException("Could not find question")))));
     } else if (allAgreements(questionInstanceOutcomes)) {
       return new Outcome(OutcomeType.AGREEMENT, AgreementList.fromItems(questionInstanceOutcomes));
     } else if (questionInstanceOutcomes.get(0) instanceof Support) {
@@ -225,8 +227,7 @@ public class OutcomeService {
       try {
         UUID.fromString(ans);
       } catch (IllegalArgumentException ex) {
-        throw new AnswersValidationException(
-            format("Invalid UUID: %s, msg: %s", ans, ex.getMessage()));
+        throw new AnswersValidationException(format("Invalid UUID: %s", ans), ex);
       }
     }
   }
@@ -242,7 +243,7 @@ public class OutcomeService {
           Double.parseDouble(answerValue);
         } catch (NumberFormatException nfe) {
           throw new AnswersValidationException(
-              "Invalid NUMBER type conditional input value: " + answerValue);
+              "Invalid NUMBER type conditional input value: " + answerValue, nfe);
         }
         break;
       default:
