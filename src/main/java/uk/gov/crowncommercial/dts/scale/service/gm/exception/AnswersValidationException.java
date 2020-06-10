@@ -14,4 +14,8 @@ public class AnswersValidationException extends RuntimeException {
     super(msg);
   }
 
+  public AnswersValidationException(final String msg, final Throwable t) {
+    super(msg, t);
+  }
+
 }

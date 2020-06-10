@@ -3,6 +3,7 @@ package uk.gov.crowncommercial.dts.scale.service.gm.model.ogm;
 import org.neo4j.ogm.annotation.EndNode;
 import org.neo4j.ogm.annotation.RelationshipEntity;
 import org.neo4j.ogm.annotation.StartNode;
+import org.springframework.lang.Nullable;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AccessLevel;
 import lombok.Data;
@@ -15,12 +16,16 @@ import lombok.experimental.FieldDefaults;
  */
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@RelationshipEntity(type = "HAS_ANSWER")
-public class HasAnswer {
+@RelationshipEntity(type = "HAS_OUTCOME")
+public class HasOutcome {
 
   Long id;
-  Integer order;
-  boolean mutex;
+
+  @Nullable
+  Long lowerBoundInclusive;
+
+  @Nullable
+  Long upperBoundExclusive;
 
   @EqualsAndHashCode.Exclude
   @ToString.Exclude
@@ -32,6 +37,6 @@ public class HasAnswer {
   @ToString.Exclude
   @JsonIgnore
   @EndNode
-  Answer answer;
+  QuestionInstanceOutcome questionInstanceOutcome;
 
 }

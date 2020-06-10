@@ -33,10 +33,13 @@ spring:
       username: neo4j
       password: sbx_graph
       
-external:
-  lookup-service:    
-    url: http://127.0.0.1:8081
-    uri-templates:
-      find-answers: "/answers?question-instance-uuid={question-instance-uuid}&modifier={modifier}}"
-      get-answer: /answers/{answer-uuid}     
+---
+spring:
+  profiles: local
+camel:
+  component:
+    servlet:
+      mapping:
+        # Mimic API Gateway path prefix (allows switching envs between local and AWS in Postman)
+        contextPath: /decision-tree/*
       

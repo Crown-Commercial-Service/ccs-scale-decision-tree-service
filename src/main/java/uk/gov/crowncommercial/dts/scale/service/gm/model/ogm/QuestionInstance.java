@@ -17,11 +17,12 @@ public class QuestionInstance implements QuestionInstanceOutcome {
 
   Long id;
   String uuid;
+  boolean conditionalInput;
 
   @Relationship(type = "HAS_ANSWER_GROUP", direction = Relationship.OUTGOING)
   Set<AnswerGroup> answerGroups;
 
   @Relationship(type = "DEFINED_BY", direction = Relationship.OUTGOING)
-  QuestionDefinition questionDefinition;
+  Question question;
 
 }

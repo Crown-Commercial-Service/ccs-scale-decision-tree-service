@@ -1,23 +1,20 @@
 package uk.gov.crowncommercial.dts.scale.service.gm.model.ogm;
 
+import java.util.Set;
 import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Relationship;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 
 /**
- * GM Journey value class
  *
  */
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @NodeEntity
-public class Journey {
+public class Agreement implements QuestionInstanceOutcome {
 
-  String uuid;
-  String name;
+  String number;
+  Set<Lot> lots;
 
-  @Relationship(type = "FIRST_QUESTION", direction = Relationship.OUTGOING)
-  QuestionInstance questionInstance;
 }

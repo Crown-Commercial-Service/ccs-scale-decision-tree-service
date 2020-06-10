@@ -3,7 +3,7 @@ package uk.gov.crowncommercial.dts.scale.service.gm.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Question type
+ * QuestionDefinition type
  *
  */
 public enum QuestionType {
@@ -33,5 +33,5 @@ public enum QuestionType {
   POSTCODE,
 
   @JsonProperty("nuts")
-  NUTS;
+  NUTS,
 }
