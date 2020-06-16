@@ -12,6 +12,7 @@ import uk.gov.crowncommercial.dts.scale.service.gm.exception.GraphException;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.AnswerDefinition;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.ConditionalInput;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.QuestionDefinition;
+import uk.gov.crowncommercial.dts.scale.service.gm.model.QuestionDefinitionList;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.ogm.Answer;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.ogm.HasAnswer;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.ogm.Question;
@@ -27,6 +28,10 @@ import uk.gov.crowncommercial.dts.scale.service.gm.repository.QuestionInstanceRe
 public class QuestionService {
 
   private final QuestionInstanceRepositoryNeo4J questionRepository;
+
+  public QuestionDefinitionList getQuestionDefinitionList(final String uuid) {
+    return QuestionDefinitionList.fromItems(getQuestion(uuid));
+  }
 
   public QuestionDefinition getQuestion(final String uuid) {
     Optional<QuestionInstance> questionInstance = questionRepository.findByUuid(uuid);

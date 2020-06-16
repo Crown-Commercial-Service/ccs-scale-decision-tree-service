@@ -10,8 +10,10 @@ import lombok.RequiredArgsConstructor;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.AnsweredQuestion;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.JourneyStart;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.Outcome;
+import uk.gov.crowncommercial.dts.scale.service.gm.model.QuestionDefinitionList;
 import uk.gov.crowncommercial.dts.scale.service.gm.service.JourneyService;
 import uk.gov.crowncommercial.dts.scale.service.gm.service.OutcomeService;
+import uk.gov.crowncommercial.dts.scale.service.gm.service.QuestionService;
 
 /**
  * Camel routing configuration (WIP)
@@ -27,6 +29,7 @@ public class DecisionTreeRouteBuilder extends EndpointRouteBuilder {
 
   private final JourneyService journeyService;
   private final OutcomeService outcomeService;
+  private final QuestionService questionService;
 
   /*
    * (non-Javadoc)
@@ -50,7 +53,7 @@ public class DecisionTreeRouteBuilder extends EndpointRouteBuilder {
       .to("direct:get-journey");
 
     from("direct:get-journey")
-      .log(LoggingLevel.INFO, "Get Journey invoked")
+      .log(LoggingLevel.INFO, "Endpoint get-journey invoked")
       .bean(journeyService, "getJourney(${headers[journey-uuid]})")
       .to(ROUTE_DIRECT_FINALISE_RESPONSE);
 
@@ -63,10 +66,10 @@ public class DecisionTreeRouteBuilder extends EndpointRouteBuilder {
       .outType(Outcome.class)
       .param().name("uuid").type(RestParamType.path).required(TRUE).endParam()
       .param().name("question-uuid").type(RestParamType.path).required(TRUE).endParam()
-      .to("direct:get-journey-next-questionInstance");
+      .to("direct:get-journey-question-outcome");
 
-    from("direct:get-journey-next-questionInstance")
-      .log(LoggingLevel.INFO, "Journey get questionInstance outcome invoked")
+    from("direct:get-journey-question-outcome")
+      .log(LoggingLevel.INFO, "Endpoint get-journey-question-outcome invoked")
       .bean(outcomeService, "getQuestionInstanceOutcome(${headers[question-uuid]}, ${body})")
       .choice()
         .when(simple("${body} == null"))
@@ -74,6 +77,21 @@ public class DecisionTreeRouteBuilder extends EndpointRouteBuilder {
           .setHeader(Exchange.CONTENT_TYPE, constant("application/json"))
           .setBody(constant("{\"errors\":[]}"))
         .end()
+      .to(ROUTE_DIRECT_FINALISE_RESPONSE);
+
+    /*
+     * Get journey questionInstance outcome
+     */
+    rest()
+      .get(PATH_JOURNEYS + "/{uuid}/questions/{question-uuid}")
+      .outType(QuestionDefinitionList.class)
+      .param().name("uuid").type(RestParamType.path).required(TRUE).endParam()
+      .param().name("question-uuid").type(RestParamType.path).required(TRUE).endParam()
+      .to("direct:get-journey-question");
+
+    from("direct:get-journey-question")
+      .log(LoggingLevel.INFO, "Endpoint get-journey-question invoked")
+      .bean(questionService, "getQuestionDefinitionList(${headers[question-uuid]})")
       .to(ROUTE_DIRECT_FINALISE_RESPONSE);
 
     from(ROUTE_DIRECT_FINALISE_RESPONSE)
