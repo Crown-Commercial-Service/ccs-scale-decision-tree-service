@@ -26,12 +26,8 @@ server:
   tomcat:
     accesslog:
       enabled: true
-      
-spring:
-  data:
-    neo4j:
-      username: neo4j
-      password: sbx_graph
+
+# Neo4J connection config via environment only
       
 ---
 spring:
