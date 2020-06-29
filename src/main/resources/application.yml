@@ -27,7 +27,13 @@ server:
     accesslog:
       enabled: true
 
-# Neo4J connection config via environment only
+# Neo4J connection config (creds) via environment only
+org:
+  neo4j:
+    driver:
+      pool:
+        idle-time-before-connection-test: 10
+        log-leaked-sessions: true       
       
 ---
 spring:
