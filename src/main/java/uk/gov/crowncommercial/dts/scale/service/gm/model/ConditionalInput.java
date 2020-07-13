@@ -20,4 +20,6 @@ public class ConditionalInput {
    */
   QuestionType type;
 
+  Unit unit;
+
 }
