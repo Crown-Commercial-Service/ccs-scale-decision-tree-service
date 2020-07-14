@@ -5,6 +5,7 @@ import lombok.AccessLevel;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 import uk.gov.crowncommercial.dts.scale.service.gm.model.QuestionType;
+import uk.gov.crowncommercial.dts.scale.service.gm.model.Unit;
 
 /**
  *
@@ -19,5 +20,6 @@ public class Question {
   String hint;
   String pattern;
   QuestionType type;
+  Unit unit;
 
 }

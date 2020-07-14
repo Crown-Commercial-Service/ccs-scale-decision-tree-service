@@ -71,11 +71,11 @@ public class QuestionService {
 
     return QuestionDefinition.builder().uuid(questionInstance.getUuid()).text(question.getText())
         .type(question.getType()).hint(question.getHint()).pattern(question.getPattern())
-        .answerDefinitions(answerDefinitions).build();
+        .answerDefinitions(answerDefinitions).unit(question.getUnit()).build();
   }
 
   private Optional<ConditionalInput> getConditionalInputFromAnswer(final Answer answer) {
     return Optional.ofNullable(answer.getConditionalInputQuestion())
-        .map(q -> new ConditionalInput(q.getText(), q.getHint(), q.getType()));
+        .map(q -> new ConditionalInput(q.getText(), q.getHint(), q.getType(), q.getUnit()));
   }
 }

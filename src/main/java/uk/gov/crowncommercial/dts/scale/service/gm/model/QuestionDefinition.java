@@ -20,5 +20,6 @@ public class QuestionDefinition {
   String pattern;
   QuestionType type;
   List<AnswerDefinition> answerDefinitions;
+  Unit unit;
 
 }
