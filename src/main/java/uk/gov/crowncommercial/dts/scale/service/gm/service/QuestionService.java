@@ -69,7 +69,8 @@ public class QuestionService {
             .sorted(Comparator.comparingInt(AnswerDefinition::getOrder))
             .collect(Collectors.toList());
 
-    return QuestionDefinition.builder().uuid(questionInstance.getUuid()).text(question.getText())
+    return QuestionDefinition.builder().uuid(questionInstance.getUuid())
+        .definitionUuid(questionInstance.getQuestion().getUuid()).text(question.getText())
         .type(question.getType()).hint(question.getHint()).pattern(question.getPattern())
         .answerDefinitions(answerDefinitions).unit(question.getUnit()).build();
   }
