@@ -11,10 +11,10 @@ import com.rollbar.spring.webmvc.RollbarSpringConfigBuilder;
 @Configuration
 public class RollbarConfig {
 
-  @Value("${rollbar.access.token}") 
+  @Value("${rollbar.access.token:1111111111}") 
   private String rollbarAccessToken;
 
-  @Value("${environment}")
+  @Value("${environment:test}")
   private String environment;
 
   /**

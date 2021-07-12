@@ -199,25 +199,25 @@ public class OutcomeService {
 
       case BOOLEAN:
         if (numAnswers != 1) {
-        	AnswersValidationException booleanave = new AnswersValidationException("Question type 'boolean' expects single answer value");
-        	rollbar.error(booleanave);
-        	throw booleanave;
+        	AnswersValidationException booleanAve = new AnswersValidationException("Question type 'boolean' expects single answer value");
+        	rollbar.error(booleanAve);
+        	throw booleanAve;
         }
         validateUuids(extractUuids(answeredQuestion.getAnswers()));
         break;
       case LIST:
         if (numAnswers != 1) {
-        	AnswersValidationException listave = new AnswersValidationException("Question type 'list' expects single answer value");
-        	rollbar.error(listave);
-        	throw listave;
+        	AnswersValidationException listAve = new AnswersValidationException("Question type 'list' expects single answer value");
+        	rollbar.error(listAve);
+        	throw listAve;
         }
         validateUuids(extractUuids(answeredQuestion.getAnswers()));
         break;
       case MULTI_SELECT_LIST:
         if (numAnswers < 1) {
-        	AnswersValidationException multiSelectListave = new AnswersValidationException("Question type 'multiSelectList' expects one or more answer values");
-        	rollbar.error(multiSelectListave);
-        	throw multiSelectListave;
+        	AnswersValidationException multiSelectListAve = new AnswersValidationException("Question type 'multiSelectList' expects one or more answer values");
+        	rollbar.error(multiSelectListAve);
+        	throw multiSelectListAve;
         }
         validateUuids(extractUuids(answeredQuestion.getAnswers()));
         break;
