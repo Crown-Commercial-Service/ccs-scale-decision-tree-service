@@ -7,7 +7,11 @@ import static uk.gov.crowncommercial.dts.scale.service.gm.model.QuestionType.MUL
 import java.util.*;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.NotImplementedException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import com.rollbar.notifier.Rollbar;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import uk.gov.crowncommercial.dts.scale.service.gm.exception.AnswersValidationException;
@@ -30,6 +34,9 @@ public class OutcomeService {
   private final QuestionInstanceRepositoryNeo4J questionInstanceRepository;
   private final QuestionService questionService;
 
+  @Autowired
+  private Rollbar rollbar;
+  
   /**
    * Attempt to find an 'outcome' (a {@link QuestionInstanceOutcome} instance which is either a
    * {@link QuestionInstance} or a collection of {@link Agreement}) from answer group based routing
@@ -50,8 +57,9 @@ public class OutcomeService {
         firstAnsweredQuestion);
 
     if (!firstAnsweredQuestion.getUuid().equals(currentQstnUuid)) {
-      throw new IllegalStateException(
-          "First answered question UUID does not match path param question UUID");
+    	IllegalStateException e = new IllegalStateException("First answered question UUID does not match path param question UUID");
+    	rollbar.error(e);
+    	throw e;
     }
 
     QuestionInstance questionInstance = questionInstanceRepository.findByUuid(currentQstnUuid)
@@ -112,7 +120,9 @@ public class OutcomeService {
       log.debug("Multi answer outcome retrieval from graph via static answers: {}", outcomes);
 
     } else {
-      throw new AnswersValidationException("Question / answer type not currently supported");
+    	AnswersValidationException e = new AnswersValidationException("Question / answer type not currently supported");
+    	rollbar.error(e);
+    	throw e;
     }
 
     if (!outcomes.isEmpty()) {
@@ -120,7 +130,9 @@ public class OutcomeService {
     }
 
     // Graph is malformed
-    throw new OutcomeException(currentQstnUuid, givenAnswers);
+    OutcomeException e = new OutcomeException(currentQstnUuid, givenAnswers);
+    rollbar.error(e);
+	throw e;
   }
 
   /**
@@ -161,9 +173,9 @@ public class OutcomeService {
     } else if (questionInstanceOutcomes.get(0) instanceof Support) {
       return new Outcome(OutcomeType.SUPPORT, null);
     } else {
-      throw new GraphException(
-          "Found neither a single QuestionInstance outcome nor multiple Agreements nor the Support type: "
-              + questionInstanceOutcomes);
+    	GraphException e = new GraphException("Found neither a single QuestionInstance outcome nor multiple Agreements nor the Support type: " + questionInstanceOutcomes);
+    	rollbar.error(e);
+    	throw e;
     }
   }
 
@@ -187,38 +199,56 @@ public class OutcomeService {
 
       case BOOLEAN:
         if (numAnswers != 1) {
-          throw new AnswersValidationException(
-              "Question type 'boolean' expects single answer value");
+        	AnswersValidationException booleanAve = new AnswersValidationException("Question type 'boolean' expects single answer value");
+        	rollbar.error(booleanAve);
+        	throw booleanAve;
         }
         validateUuids(extractUuids(answeredQuestion.getAnswers()));
         break;
       case LIST:
         if (numAnswers != 1) {
-          throw new AnswersValidationException("Question type 'list' expects single answer value");
+        	AnswersValidationException listAve = new AnswersValidationException("Question type 'list' expects single answer value");
+        	rollbar.error(listAve);
+        	throw listAve;
         }
         validateUuids(extractUuids(answeredQuestion.getAnswers()));
         break;
       case MULTI_SELECT_LIST:
         if (numAnswers < 1) {
-          throw new AnswersValidationException(
-              "Question type 'multiSelectList' expects one or more answer values");
+        	AnswersValidationException multiSelectListAve = new AnswersValidationException("Question type 'multiSelectList' expects one or more answer values");
+        	rollbar.error(multiSelectListAve);
+        	throw multiSelectListAve;
         }
         validateUuids(extractUuids(answeredQuestion.getAnswers()));
         break;
       case TEXT_INPUT:
-        throw new NotImplementedException("TEXT_INPUT question type not implemented");
+    	  NotImplementedException textInputEx = new NotImplementedException("TEXT_INPUT question type not implemented");
+    	  rollbar.error(textInputEx);
+    	  throw textInputEx;
       case DATE:
-        throw new NotImplementedException("DATE question type not implemented");
+    	  NotImplementedException dateEx = new NotImplementedException("DATE question type not implemented");
+    	  rollbar.error(dateEx);
+    	  throw dateEx;
       case DATE_RANGE:
-        throw new NotImplementedException("DATE_RANGE question type not implemented");
+    	  NotImplementedException dateRangeEx = new NotImplementedException("DATE_RANGE question type not implemented");
+    	  rollbar.error(dateRangeEx);
+    	  throw dateRangeEx;
       case NUMBER:
-        throw new NotImplementedException("NUMBER question type not implemented");
+    	  NotImplementedException numberEx = new NotImplementedException("NUMBER question type not implemented");
+    	  rollbar.error(numberEx);
+    	  throw numberEx;
       case NUTS:
-        throw new NotImplementedException("NUTS question type not implemented");
+    	  NotImplementedException nutsEx = new NotImplementedException("NUTS question type not implemented");
+    	  rollbar.error(nutsEx);
+    	  throw nutsEx;
       case POSTCODE:
-        throw new NotImplementedException("POSTCODE question type not implemented");
+    	  NotImplementedException postcodeEx = new NotImplementedException("POSTCODE question type not implemented");
+    	  rollbar.error(postcodeEx);
+    	  throw postcodeEx;
       default:
-        throw new AnswersValidationException("Unable to validate unsupported QuestionType");
+    	  NotImplementedException defaultEx = new NotImplementedException("Unable to validate unsupported QuestionType");
+    	  rollbar.error(defaultEx);
+    	  throw defaultEx;
     }
   }
 
@@ -227,7 +257,9 @@ public class OutcomeService {
       try {
         UUID.fromString(ans);
       } catch (IllegalArgumentException ex) {
-        throw new AnswersValidationException(format("Invalid UUID: %s", ans), ex);
+    	  AnswersValidationException e = new AnswersValidationException(format("Invalid UUID: %s", ans), ex);
+    	  rollbar.error(e);
+    	  throw e;
       }
     }
   }
@@ -242,13 +274,15 @@ public class OutcomeService {
         try {
           Double.parseDouble(answerValue);
         } catch (NumberFormatException nfe) {
-          throw new AnswersValidationException(
-              "Invalid NUMBER type conditional input value: " + answerValue, nfe);
+        	AnswersValidationException e = new AnswersValidationException("Invalid NUMBER type conditional input value: " + answerValue, nfe);
+        	rollbar.error(e);
+      	  	throw e;
         }
         break;
       default:
-        throw new NotImplementedException(
-            "Only NUMBER conditional input question types are implemented");
+    	  NotImplementedException e = new NotImplementedException("Only NUMBER conditional input question types are implemented");
+    	  rollbar.error(e);
+    	  throw e;
     }
   }
 
