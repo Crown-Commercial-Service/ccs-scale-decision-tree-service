@@ -222,33 +222,33 @@ public class OutcomeService {
         validateUuids(extractUuids(answeredQuestion.getAnswers()));
         break;
       case TEXT_INPUT:
-    	  NotImplementedException TEXT_INPUTe = new NotImplementedException("TEXT_INPUT question type not implemented");
-    	  rollbar.error(TEXT_INPUTe);
-    	  throw TEXT_INPUTe;
+    	  NotImplementedException textInputEx = new NotImplementedException("TEXT_INPUT question type not implemented");
+    	  rollbar.error(textInputEx);
+    	  throw textInputEx;
       case DATE:
-    	  NotImplementedException DATEe = new NotImplementedException("DATE question type not implemented");
-    	  rollbar.error(DATEe);
-    	  throw DATEe;
+    	  NotImplementedException dateEx = new NotImplementedException("DATE question type not implemented");
+    	  rollbar.error(dateEx);
+    	  throw dateEx;
       case DATE_RANGE:
-    	  NotImplementedException DATE_RANGEe = new NotImplementedException("DATE_RANGE question type not implemented");
-    	  rollbar.error(DATE_RANGEe);
-    	  throw DATE_RANGEe;
+    	  NotImplementedException dateRangeEx = new NotImplementedException("DATE_RANGE question type not implemented");
+    	  rollbar.error(dateRangeEx);
+    	  throw dateRangeEx;
       case NUMBER:
-    	  NotImplementedException NUMBERe = new NotImplementedException("NUMBER question type not implemented");
-    	  rollbar.error(NUMBERe);
-    	  throw NUMBERe;
+    	  NotImplementedException numberEx = new NotImplementedException("NUMBER question type not implemented");
+    	  rollbar.error(numberEx);
+    	  throw numberEx;
       case NUTS:
-    	  NotImplementedException NUTSe = new NotImplementedException("NUTS question type not implemented");
-    	  rollbar.error(NUTSe);
-    	  throw NUTSe;
+    	  NotImplementedException nutsEx = new NotImplementedException("NUTS question type not implemented");
+    	  rollbar.error(nutsEx);
+    	  throw nutsEx;
       case POSTCODE:
-    	  NotImplementedException POSTCODEe = new NotImplementedException("POSTCODE question type not implemented");
-    	  rollbar.error(POSTCODEe);
-    	  throw POSTCODEe;
+    	  NotImplementedException postcodeEx = new NotImplementedException("POSTCODE question type not implemented");
+    	  rollbar.error(postcodeEx);
+    	  throw postcodeEx;
       default:
-    	  NotImplementedException defaulte = new NotImplementedException("Unable to validate unsupported QuestionType");
-    	  rollbar.error(defaulte);
-    	  throw defaulte;
+    	  NotImplementedException defaultEx = new NotImplementedException("Unable to validate unsupported QuestionType");
+    	  rollbar.error(defaultEx);
+    	  throw defaultEx;
     }
   }
 
