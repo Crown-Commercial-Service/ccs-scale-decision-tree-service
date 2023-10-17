@@ -4,6 +4,7 @@ import static java.lang.Boolean.TRUE;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.endpoint.EndpointRouteBuilder;
+import org.apache.camel.builder.endpoint.dsl.RestEndpointBuilderFactory.RestBindingMode;
 import org.apache.camel.model.rest.RestParamType;
 import org.springframework.stereotype.Component;
 import lombok.RequiredArgsConstructor;
