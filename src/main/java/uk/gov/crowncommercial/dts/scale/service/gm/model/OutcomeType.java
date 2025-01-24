@@ -13,6 +13,9 @@ public enum OutcomeType {
   @JsonProperty("agreement")
   AGREEMENT,
 
+  @JsonProperty("url")
+  URL,
+
   @JsonProperty("support")
   SUPPORT;
 }

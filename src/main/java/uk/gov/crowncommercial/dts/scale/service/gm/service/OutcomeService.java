@@ -169,9 +169,11 @@ public class OutcomeService {
                   .findById(((QuestionInstance) questionInstanceOutcomes.get(0)).getId(), 3)
                   .orElseThrow(() -> new GraphException("Could not find question")))));
     } else if (allAgreements(questionInstanceOutcomes)) {
-      return new Outcome(OutcomeType.AGREEMENT, AgreementList.fromItems(questionInstanceOutcomes));
+        return new Outcome(OutcomeType.AGREEMENT, AgreementList.fromItems(questionInstanceOutcomes));
+    } else if (questionInstanceOutcomes.get(0) instanceof Url) {
+        return new Outcome(OutcomeType.URL, UrlOutcome.getData((Url) questionInstanceOutcomes.get(0)));
     } else if (questionInstanceOutcomes.get(0) instanceof Support) {
-      return new Outcome(OutcomeType.SUPPORT, null);
+        return new Outcome(OutcomeType.SUPPORT, null);
     } else {
     	GraphException e = new GraphException("Found neither a single QuestionInstance outcome nor multiple Agreements nor the Support type: " + questionInstanceOutcomes);
     	rollbar.error(e);
